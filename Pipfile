@@ -1,0 +1,15 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+qrcodegen = "*"
+qrcode = {extras = ["pil"], version = "*"}
+pyzxing = "*"
+pyzbar = {extras = ["scripts"], version = "*"}
+
+[dev-packages]
+
+[requires]
+python_version = "3.8"
