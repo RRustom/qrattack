@@ -33,7 +33,7 @@ def generate_malicious_qr(image_path):
 
     # 5. Calculate the ratios ri of modules in the symmetric differences that
     # indicate a change from white to black (thus fulfilling our initial condition):
-    step_5()
+    calculate_difference_ratio()
 
     # 6. Order the QR codes by ratio ri, descending. Codes where the number of codewords
     # (not modules) that need to get changed from black to white is higher than the error-
@@ -81,15 +81,46 @@ def generate_similar_payloads(url):
     return
 
 def generate_qr_code(message):
+    """Generates QR code corresponding to message
+
+    Args:
+        message: a string containing desired message
+    Returns:
+        A QrCode object that encodes message.
+    """
     return
 
 # Rami
-def symmetric_diff():
+def symmetric_diff(q_0, q_i):
+    """Calculates symmetric difference between 2 QR codes
+
+    Symmetric difference is the set of modules that are different colors at the
+    same position on both QrCodes q_0 and q_i
+
+    Args:
+        q_0: A QrCode object
+        q_i: A QrCode object
+    Returns:
+        A ???[set?list?other?] that contains all the modules that at the same
+        locations in q_0 and q_1 are not the same color.
+    """
     # TODO: non-trivial
     return
 
 # Lindsey
-def step_5():
+def calculate_difference_ratio():
+    """Calculates ratio of white to black module changes
+
+    From the ???[set?list?other?] of modules that differed between two QrCodes,
+    finds the ratio of the chages that where changed from white to black
+
+    Args:
+        q_0: A QrCode object
+        q_i: A QrCode object
+    Returns:
+        A ???[set?list?other?] that contains all the modules that at the same
+        locations in q_0 and q_1 are not the same color.
+    """
     return
 
 # Lindsey
