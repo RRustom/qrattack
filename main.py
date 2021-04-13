@@ -1,15 +1,16 @@
 from qrcodegen import *
-from pyzbar.pyzbar import decode
-from PIL import Image
+# from pyzbar.pyzbar import decode
+# from PIL import Image
 
 
 
 def generate_malicious_qr(image_path):
-    [decoded] = decode(Image.open(image_path))
+    # [decoded] = decode(Image.open(image_path))
     # 1. Scan the QR code (Q0) with a mobile device capable of decoding QR codes
     # and re- trieve the corresponding Message M0.
     # For the rest of the paper we assume that M0 is a URL to a website.
-    m0 = decoded.data
+    # m0 = decoded.data
+    m0 = 0
 
     # TODO: verify URL
     if not is_valid_url(m0):
@@ -91,37 +92,44 @@ def generate_qr_code(message):
     return
 
 # Rami
-def symmetric_diff(q_0, q_i):
+def symmetric_diff(qr_0, qr_i):
     """Calculates symmetric difference between 2 QR codes
 
     Symmetric difference is the set of modules that are different colors at the
     same position on both QrCodes q_0 and q_i
 
     Args:
-        q_0: A QrCode object
-        q_i: A QrCode object
+        qr_0: A QrCode object of size nxn
+        qr_i: A QrCode object also of size nxn
     Returns:
-        A ???[set?list?other?] that contains all the modules that at the same
-        locations in q_0 and q_1 are not the same color.
+        A list diffs of two lists of tuples that represent (x,y) positions on
+        the qr odes. The first list diffs[0] contains tuples representing
+        all of the positions where the qr_0 module was white and qr_i module
+        was black, while the second list diffs[1] contains tuples representing
+        the opposite: positions where qr_0 was black and qr_i was white. All
+        (x,y) pairs in range (n,n) not included in either list are the same
+        color in both qr_0 and qr_i.
     """
-    # TODO: non-trivial
-    return
-
+    for y in range(qr_0.get_size()):
+        for x in range(qr_0.get_size()):
+            qr_0_color = qr_0.get_module(x, y)
 # Lindsey
-def calculate_difference_ratio():
-    """Calculates ratio of white to black module changes
+def calculate_difference_ratio(symmetric_diffs):
+    """Calculates ratio of size of symmetric_diff[0] to total elems in symmetric_diff
 
-    From the ???[set?list?other?] of modules that differed between two QrCodes,
-    finds the ratio of the chages that where changed from white to black
+    From two lists of unique length-2 tuples of integers that do not overlap,
+    calculates the ratio of the number of elements in the first list to the
+    total number of elements included in both lists.
 
     Args:
-        q_0: A QrCode object
-        q_i: A QrCode object
+        symmetric_diff: A list containing two lists of unique length-2 tuples
+        of integers that do not overlap
     Returns:
-        A ???[set?list?other?] that contains all the modules that at the same
-        locations in q_0 and q_1 are not the same color.
+        the ratio of the first list length to length of the combined lists
+        if both lists are empty, returns 1
     """
-    return
+    combined_lists = [pair for sublist in symmetric_diffs for pair in sublist]
+    return len(symmetric_diffs[0])/len(combined_lists)
 
 # Lindsey
 def step_6():
