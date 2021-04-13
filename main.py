@@ -91,7 +91,7 @@ def generate_qr_code(message):
     """
     return
 
-# Rami
+# Lindsey
 def symmetric_diff(qr_0, qr_i):
     """Calculates symmetric difference between 2 QR codes
 
@@ -110,9 +110,15 @@ def symmetric_diff(qr_0, qr_i):
         (x,y) pairs in range (n,n) not included in either list are the same
         color in both qr_0 and qr_i.
     """
+    symmetric_diffs = [[],[]]
     for y in range(qr_0.get_size()):
         for x in range(qr_0.get_size()):
             qr_0_color = qr_0.get_module(x, y)
+            qr_i_color = qr_i.get_module(x, y)
+            if qr_0_color != qr_i_color:
+                symmetric_diffs[qr_0_color].append((x,y)) # make sure black/white interpretation is correct here linds!
+    return symmetric_diffs
+
 # Lindsey
 def calculate_difference_ratio(symmetric_diffs):
     """Calculates ratio of size of symmetric_diff[0] to total elems in symmetric_diff
@@ -131,7 +137,7 @@ def calculate_difference_ratio(symmetric_diffs):
     combined_lists = [pair for sublist in symmetric_diffs for pair in sublist]
     return len(symmetric_diffs[0])/len(combined_lists)
 
-# Lindsey
+# Rami
 def step_6():
     return
 
