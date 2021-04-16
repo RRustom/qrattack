@@ -1,10 +1,8 @@
 from qrcodegen import *
 import numpy as np
-# from pyzbar.pyzbar import decode
-# from PIL import Image
 import requests
-
-
+from pyzbar.pyzbar import decode
+from PIL import Image
 
 def generate_malicious_qr(image_path):
     # [decoded] = decode(Image.open(image_path))
@@ -305,6 +303,8 @@ def order_codes_by_ratio(qr_codes, symmetric_diff_ratios, ecc):
 
 # Rami
 def verify_solution(q0, m0, ordered_qr_codes):
+    """TODO
+    """
     # 7. Start with the first QR code Q1 (now sorted) and color white modules of Q0 that are black in Q1 black.
     # Check after every module, whether the meaning of the QR code can be decoded
     # and results in a different message than the original. Repeat this until a valid
@@ -330,13 +330,13 @@ def verify_solution(q0, m0, ordered_qr_codes):
         qx = qr_matrix(qi)
         dx = np.logical_xor(q0, qx)
         rx = np.logical_and(qx, dx)
-        qx_prime_matrix = np.logical_or(q0, rx)
+        qx_prime = np.logical_or(q0, rx)
 
         # Check after every module, whether the meaning of the QR code can be decoded
         # and results in a different message than the original.
 
         # TODO: manually generate QR code
-        qx_prime = generate_qr_from_matrix(qx_prime_matrix)
+        # qx_prime = generate_qr_from_matrix(qx_prime_matrix)
 
         if can_be_decoded(qx_prime):
             valid_codes.append(qx_prime)
@@ -347,11 +347,21 @@ def generate_qr_from_matrix(qr_matrix):
     # TODO
     return
 
-def can_be_decoded(qr_code):
-    # TODO
-    return
+def can_be_decoded(qr_matrix):
+    """
+    """
+    (height, width) = qr_matrix.shape
+    try:
+        decoded = decode(qr_matrix, width, height))
+        return True
+    except:
+        return False
+
 
 def qr_matrix(qr):
+    """
+    TODO
+    """
     matrix = []
     for y in range(qr.get_size()):
         row = []
@@ -362,14 +372,19 @@ def qr_matrix(qr):
 
 
 
-# qr0 = QrCode.encode_text("Hello, world!", QrCode.Ecc.MEDIUM)
+qr = QrCode.encode_text("Hello, world!", QrCode.Ecc.MEDIUM)
 # svg = qr0.to_svg_str(4)
 #
-# output_file = open("qr0.txt", 'w+')
-#
-# output_file.write(svg)
-#
-# output_file.close()
+output_file = open("qr_test.txt", 'w+')
+
+for y in range(qr.get_size()):
+    for x in range(qr.get_size()):
+        module = qr.get_module(x, y)
+        b = 1 if module else 0
+        output_file.write(str(b) + " ")
+    output_file.write("\n")
+
+output_file.close()
 #
 
 #generate_malicious_qr('test_qrcode.png')
