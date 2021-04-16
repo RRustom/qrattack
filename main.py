@@ -122,13 +122,15 @@ def similar_sl_domains(sl_domain, n):
         similar: <list> List of similar domain names
     '''
     similar = []
-    # Insert random ascii char:
-    alphabet_string = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+    # 1 Insert random alphabetic char:
+    alphabet_string = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
+                        'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+                        'w', 'x', 'y', 'z']
     for i in alphabet_string:
         similar.append(sl_domain+i)
-    #duplicate Char in middle of string:
-    #duplicate entire starting
-    #add number
+    # 2 Duplicate Char in middle of string:
+    # 3 Duplicate entire string
+    # 4 Add number
     return similar
 
 def generate_similar_urls(url, num_similar, with_sub_domains = False, with_filename = False):
@@ -160,9 +162,8 @@ def generate_similar_urls(url, num_similar, with_sub_domains = False, with_filen
     #Generate similar sl_domains
     similar = similar_sl_domains(sl_domain = sl_domain, n = num_similar)
 
+    # iterate through similar urls
     for i in similar:
-
-        #Scramble sl_domain here
         new_sl_domain = i
 
         if with_sub_domains and with_filename: #inefficient to check every time
