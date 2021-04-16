@@ -1,4 +1,5 @@
 from qrcodegen import *
+import numpy as np
 # from pyzbar.pyzbar import decode
 # from PIL import Image
 import requests
@@ -17,6 +18,10 @@ def generate_malicious_qr(image_path):
     if not is_valid_url(m0):
         return
 
+    # original QR code (QrCode object)
+    q0 = generate_qr_code(m0)
+    ecc = q0.get_error_correction_level() # TODO: or just use whatever we decode?
+
     # 2. Generate several messages Mi, i = 1,...,n, that contain URLs to possible
     # phishing sites (the new messages are generated in a way to make them look
     # similar to the origi- nal one, e.g. by systematically changing characters
@@ -28,20 +33,18 @@ def generate_malicious_qr(image_path):
     # so no changes in these regions of the Code need to be done.
     qr_codes = [generate_qr_code(message) for message in messages]
 
-    # 4. Construct the symmetric difference Di of the generated QR code to the original:
-    # Di = Q0 △Qi, i = 1,...,n. The symmetric difference is defined as the set of
-    # modules on the same positions in their respective QR codes that differ in color.
-    symmetric_diff()
+    # 4. Construct the symmetric difference Di of the generated QR code to the original,
+    # for each q_i in qr_codes
+    symmetric_diffs = [symmetric_diff(q_0, q_i) for q_i in qr_codes]
 
     # 5. Calculate the ratios ri of modules in the symmetric differences that
-    # indicate a change from white to black (thus fulfilling our initial condition):
-    calculate_difference_ratio()
+    # indicate a change from white to black
+    symmetric_diff_ratios = [calculate_difference_ratio(sd) for sd in symmetric_diffs]
 
     # 6. Order the QR codes by ratio ri, descending. Codes where the number of codewords
     # (not modules) that need to get changed from black to white is higher than the error-
-    # correcting capacity of the code can be omitted.
-    # non trivial?
-    step_6()
+    # correcting capacity of the code can be omitted
+    ordered_codes = order_codes_by_ratio(qr_codes, symmetric_diff_ratios, ecc)
 
     # 7. Start with the first QR code Q1 (now sorted) and color white modules of Q0 that are black in Q1 black.
     # Check after every module, whether the meaning of the QR code can be decoded
@@ -49,6 +52,16 @@ def generate_malicious_qr(image_path):
     # coloring is found (for the first b elements the check can be omitted,
     # where b denotes the number of errors the BCH-encoding is capable of correcting plus one.
     # If the resulting code Q′i can get decoded to message Mi, a solution was found.
+    # In step seven, the following optimization can be used:
+    # Instead of coloring module by module, we simply change all modules that can be
+    # changed by only using black color at once and thus generate Q′x by applying
+    # the fast and simple element-wise OR-function: Q'x = Q0 OR Rx, (OR = element-wise OR)
+    # Q0 = target code,
+    # Q'x = generated code,
+    # Rx = Qx AND Dx (AND = element-wise AND)
+    # Dx = Q0 XOR Qx,
+    # Qx = code in qr_codes
+
     verify_solution()
 
     # 8. The last step can be repeated for all Qi where the number of black
@@ -211,15 +224,16 @@ def generate_similar_payloads(url):
     # TODO (2.0)
     return
 
-def generate_qr_code(message):
+def generate_qr_code(message, ecc):
     """Generates QR code corresponding to message
 
     Args:
         message: a string containing desired message
+        ecc: a string Error correction level: "LOW", "MEDIUM", "QUARTILE", "HIGH"
     Returns:
         A QrCode object that encodes message.
     """
-    return
+    return QrCode.encode_text(message, getattr(QrCode.Ecc, ecc))
 
 # Lindsey
 def symmetric_diff(qr_0, qr_i):
@@ -267,14 +281,85 @@ def calculate_difference_ratio(symmetric_diffs):
     combined_lists = [pair for sublist in symmetric_diffs for pair in sublist]
     return len(symmetric_diffs[0])/len(combined_lists)
 
-# Rami
-def step_6():
-    return
+# Rami (step 6)
+def order_codes_by_ratio(qr_codes, symmetric_diff_ratios, ecc):
+    """Order qr_codes by symmetric_diff ratio r_i in descending order
+
+    Args:
+        qr_codes: list of QrCode objects
+        symmetric_diff_ratios: list of ratios r_i
+        ecc: error correction capacity of target QR code
+    Returns:
+        A list of ordered QrCode objects
+    """
+    # LOW = 0.07
+    # MEDIUM = 0.15
+    # QUARTILE = 0.25
+    # HIGH = 0.3
+
+    # order qr_codes by symmetric_diff_ratios in descending order
+    ordered = [qr for ri, qr in sorted(zip(symmetric_diff_ratios, qr_codes), reverse=True)]
+
+    # omit qr codes where r_i is less than the error correcting capacity of target qr code
+    return list(filter(lambda x: ri <= ecc, ordered))
 
 # Rami
-def verify_solution():
-    # TODO: non-trivial
+def verify_solution(q0, m0, ordered_qr_codes):
+    # 7. Start with the first QR code Q1 (now sorted) and color white modules of Q0 that are black in Q1 black.
+    # Check after every module, whether the meaning of the QR code can be decoded
+    # and results in a different message than the original. Repeat this until a valid
+    # coloring is found (for the first b elements the check can be omitted,
+    # where b denotes the number of errors the BCH-encoding is capable of correcting plus one.
+    # If the resulting code Q′i can get decoded to message Mi, a solution was found.
+    # In step seven, the following optimization can be used:
+    # Instead of coloring module by module, we simply change all modules that can be
+    # changed by only using black color at once and thus generate Q′x by applying
+    # the fast and simple element-wise OR-function: Q'x = Q0 OR Rx, (OR = element-wise OR)
+    # Q0 = target code,
+    # Q'x = generated code,
+    # Rx = Qx AND Dx (AND = element-wise AND)
+    # Dx = Q0 XOR Qx,
+    # Qx = code in qr_codes
+
+    q0 = qr_matrix(q0)
+
+    valid_codes = []
+
+    for qi in ordered_qr_codes:
+        # color white modules of Q0 that are black in Q1 black. (element wise OR)
+        qx = qr_matrix(qi)
+        dx = np.logical_xor(q0, qx)
+        rx = np.logical_and(qx, dx)
+        qx_prime_matrix = np.logical_or(q0, rx)
+
+        # Check after every module, whether the meaning of the QR code can be decoded
+        # and results in a different message than the original.
+
+        # TODO: manually generate QR code
+        qx_prime = generate_qr_from_matrix(qx_prime_matrix)
+
+        if can_be_decoded(qx_prime):
+            valid_codes.append(qx_prime)
+
+    return valid_codes
+
+def generate_qr_from_matrix(qr_matrix):
+    # TODO
     return
+
+def can_be_decoded(qr_code):
+    # TODO
+    return
+
+def qr_matrix(qr):
+    matrix = []
+    for y in range(qr.get_size()):
+        row = []
+        for x in range(qr.get_size()):
+            row.append(qr.get_module(x, y))
+        matrix.append(row)
+    return np.array(matrix)
+
 
 
 # qr0 = QrCode.encode_text("Hello, world!", QrCode.Ecc.MEDIUM)

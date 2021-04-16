@@ -8,6 +8,7 @@ qrcodegen = "*"
 qrcode = {extras = ["pil"], version = "*"}
 pyzxing = "*"
 pyzbar = {extras = ["scripts"], version = "*"}
+numpy = "*"
 
 [dev-packages]
 
