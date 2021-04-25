@@ -142,24 +142,52 @@ def similar_sl_domains(sl_domain, n):
         similar: <list> List of similar domain names
     '''
     similar = []
-    # 1 Insert random alphabetic char:
+
     alphabet_string = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
                         'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
                         'w', 'x', 'y', 'z']
     number_list = [1,2,3,4,5,6,7,8,9]
+
+    # 1 Insert random alphabetic char @ end:
     for i in alphabet_string:
         similar.append(sl_domain+i)
+
     # 2 Duplicate Char in middle of string:
     for i in range(len(sl_domain)-1):
-        toAdd = sl_domain[:i] + sl_domain[i] + sl_domain[i+1:]
+        toAdd = sl_domain[:i+1] + sl_domain[i] + sl_domain[i+1:]
         similar.append(toAdd)
-    # 3 Duplicate entire string
-    # 4 Add number
+
+    # 3 Duplicate entire string?
+
+    # 4 Add number @ end
     for i in number_list:
         similar.append(sl_domain+str(i))
 
-    #Could do more sophisticated things like replace letters with look alike numbers
-    return similar
+    # 5 Look alike numbers and letters
+    for i in range(len(sl_domain)-1):
+        if sl_domain[i] == '0':
+            #Replace zeros with Os
+            toAdd = sl_domain[:i] + "O" + sl_domain[i+1:]
+            similar.append(toAdd)
+        elif sl_domain[i] == 'o' or sl_domain[i] == 'O': #Capital or lower case
+            #Replace Os and os with zeros
+            toAdd = sl_domain[:i] + "0" + sl_domain[i+1:]
+            similar.append(toAdd)
+
+
+    for i in range(len(sl_domain)-1):
+        if sl_domain[i] == '1':
+            #Replace ones with l
+            toAdd = sl_domain[:i] + "l" + sl_domain[i+1:]
+            similar.append(toAdd)
+        elif sl_domain[i] == 'l' or sl_domain[i] == 'L': #Capital or lower case
+            #Replace l and L with ones
+            toAdd = sl_domain[:i] + "1" + sl_domain[i+1:]
+            similar.append(toAdd)
+
+    # We change at most 1 character in a url...
+
+    return similar[:min(len(similar), n)]
 
 def generate_similar_urls(url, num_similar, with_sub_domains = False, with_filename = False):
     '''
@@ -229,7 +257,7 @@ def generate_similar_urls(url, num_similar, with_sub_domains = False, with_filen
 
 url = "https://www.geeksforgeeks.org/python-generate-random-string-of-given-length/"
 print(is_valid_url(url))
-print(generate_similar_urls(url, 2))
+print(generate_similar_urls(url, 10))
 
 def generate_similar_strings(url):
     # TODO (1.1)
