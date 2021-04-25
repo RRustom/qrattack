@@ -71,15 +71,17 @@ def generate_malicious_qr(image_path):
 # Eric
 def is_valid_url(url):
     '''
-    Checks vaidity of url; Assumes prefix of http:// or https://
+    Checks vaidity of url using parse_url helper function.
 
     Args:
         url: string representing a URL
     Returns:
         Boolean indicating validity of url
     '''
-    r = requests.get(url)
-    return r.status_code == requests.codes.ok # Check for status code 200
+    valid = False
+    if parse_url(url) is not None:
+        valid = True
+    return valid
 
 # Eric
 
@@ -115,11 +117,16 @@ def parse_url(url):
             tl_domain: <str> Top Level domain name, i.e. 'com', 'org', 'net'
             filename: <str> any filename on the website
     '''
+    try:
+        protocol, hostname_filename = url.split('://') # Extract http vs https
+        hostname, filename = hostname_filename.split('/', 1) # Separate host from filename
+        sub_domains, sl_domain, tl_domain = hostname.rsplit('.',2) # Separate layers of domains
+        return protocol, sub_domains, sl_domain, tl_domain, filename
 
-    protocol, hostname_filename = url.split('://') # Extract http vs https
-    hostname, filename = hostname_filename.split('/', 1) # Separate host from filename
-    sub_domains, sl_domain, tl_domain = hostname.rsplit('.',2) # Separate layers of domains
-    return protocol, sub_domains, sl_domain, tl_domain, filename
+    except:
+        print("Failed to Parse URL:" + url)
+        return None
+
 
 
 def similar_sl_domains(sl_domain, n):
