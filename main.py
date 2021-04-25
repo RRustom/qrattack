@@ -98,7 +98,10 @@ def build_url(protocol, sl_domain, tl_domain, sub_domains='', filename=''):
     Returns:
         url: <str> a url
     '''
-    url = protocol + '://' + sub_domains + '.' + sl_domain + '.' + tl_domain + '/' + filename
+    if sub_domains: #things like www
+        url = protocol + '://' + sub_domains + '.' + sl_domain + '.' + tl_domain + '/' + filename
+    else: #eliminnates www.
+        url = protocol + '://' + sl_domain + '.' + tl_domain + '/' + filename
     return url
 
 def parse_url(url):
@@ -143,16 +146,25 @@ def similar_sl_domains(sl_domain, n):
     alphabet_string = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
                         'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
                         'w', 'x', 'y', 'z']
+    number_list = [1,2,3,4,5,6,7,8,9]
     for i in alphabet_string:
         similar.append(sl_domain+i)
     # 2 Duplicate Char in middle of string:
+    for i in range(len(sl_domain)-1):
+        toAdd = sl_domain[:i] + sl_domain[i] + sl_domain[i+1:]
+        similar.append(toAdd)
     # 3 Duplicate entire string
     # 4 Add number
+    for i in number_list:
+        similar.append(sl_domain+str(i))
+
+    #Could do more sophisticated things like replace letters with look alike numbers
     return similar
 
 def generate_similar_urls(url, num_similar, with_sub_domains = False, with_filename = False):
     '''
-    Creates a specified number of urls that are similar to the url provided.
+    Creates a specified number of urls that are similar to the url provided; assumes
+    url provided has been checked for validity.
 
     Args:
         url: <Str> a full url, starting with 'http' or 'https'
@@ -204,7 +216,7 @@ def generate_similar_urls(url, num_similar, with_sub_domains = False, with_filen
                             tl_domain = tl_domain,
                             filename=filename
                             )
-        else:
+        else: #Default
             url = build_url(
                             protocol = protocol,
                             sl_domain = new_sl_domain,
