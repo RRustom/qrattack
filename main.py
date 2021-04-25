@@ -1,6 +1,5 @@
 from qrcodegen import *
 import numpy as np
-import requests
 from pyzbar.pyzbar import decode
 from PIL import Image
 
@@ -163,7 +162,6 @@ def generate_similar_urls(url, num_similar, with_sub_domains = False, with_filen
     Returns:
         output_urls: <list> containing <str> list of similar domain names
     '''
-    # TODO (1.0)
     # constraints:
     #   - same length
     #   - same top level domain: https://www.icann.org/resources/pages/tlds-2012-02-25-en
@@ -359,7 +357,7 @@ def can_be_decoded(qr_matrix):
     """
     (height, width) = qr_matrix.shape
     try:
-        decoded = decode(qr_matrix, width, height))
+        decoded = decode(qr_matrix, width, height)
         return True
     except:
         return False
@@ -379,19 +377,19 @@ def qr_matrix(qr):
 
 
 
-qr = QrCode.encode_text("Hello, world!", QrCode.Ecc.MEDIUM)
-# svg = qr0.to_svg_str(4)
+# qr = QrCode.encode_text("Hello, world!", QrCode.Ecc.MEDIUM)
+# # svg = qr0.to_svg_str(4)
+# #
+# output_file = open("qr_test.txt", 'w+')
 #
-output_file = open("qr_test.txt", 'w+')
-
-for y in range(qr.get_size()):
-    for x in range(qr.get_size()):
-        module = qr.get_module(x, y)
-        b = 1 if module else 0
-        output_file.write(str(b) + " ")
-    output_file.write("\n")
-
-output_file.close()
+# for y in range(qr.get_size()):
+#     for x in range(qr.get_size()):
+#         module = qr.get_module(x, y)
+#         b = 1 if module else 0
+#         output_file.write(str(b) + " ")
+#     output_file.write("\n")
+#
+# output_file.close()
 #
 
 #generate_malicious_qr('test_qrcode.png')
