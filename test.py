@@ -2,6 +2,11 @@ import unittest
 from main import *
 from qrcodegen import *
 
+class Test_Order_Codes_By_Ratio(unittest.TestCase):
+    def setup(self, m1, m2):
+        return
+
+
 class Test5_Symmetric_Difference(unittest.TestCase):
     # Lindsey's exploratory code; don't delete yet
     # segs = QrSegment.make_segments("a")
