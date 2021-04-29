@@ -1,17 +1,17 @@
-import requests
-
 # Eric
 def is_valid_url(url):
     '''
-    Checks vaidity of url; Assumes prefix of http:// or https://
+    Checks vaidity of url using parse_url helper function.
 
     Args:
         url: string representing a URL
     Returns:
         Boolean indicating validity of url
     '''
-    r = requests.get(url)
-    return r.status_code == requests.codes.ok # Check for status code 200
+    valid = False
+    if parse_url(url) is not None:
+        valid = True
+    return valid
 
 # Eric
 
@@ -29,7 +29,10 @@ def build_url(protocol, sl_domain, tl_domain, sub_domains='', filename=''):
     Returns:
         url: <str> a url
     '''
-    url = protocol + '://' + sub_domains + '.' + sl_domain + '.' + tl_domain + '/' + filename
+    if sub_domains: #things like www
+        url = protocol + '://' + sub_domains + '.' + sl_domain + '.' + tl_domain + '/' + filename
+    else: #eliminnates www.
+        url = protocol + '://' + sl_domain + '.' + tl_domain + '/' + filename
     return url
 
 def parse_url(url):
@@ -47,11 +50,16 @@ def parse_url(url):
             tl_domain: <str> Top Level domain name, i.e. 'com', 'org', 'net'
             filename: <str> any filename on the website
     '''
+    try:
+        protocol, hostname_filename = url.split('://') # Extract http vs https
+        hostname, filename = hostname_filename.split('/', 1) # Separate host from filename
+        sub_domains, sl_domain, tl_domain = hostname.rsplit('.',2) # Separate layers of domains
+        return protocol, sub_domains, sl_domain, tl_domain, filename
 
-    protocol, hostname_filename = url.split('://') # Extract http vs https
-    hostname, filename = hostname_filename.split('/', 1) # Separate host from filename
-    sub_domains, sl_domain, tl_domain = hostname.rsplit('.',2) # Separate layers of domains
-    return protocol, sub_domains, sl_domain, tl_domain, filename
+    except:
+        print("Failed to Parse URL:" + url)
+        return None
+
 
 
 def similar_sl_domains(sl_domain, n):
@@ -65,20 +73,57 @@ def similar_sl_domains(sl_domain, n):
         similar: <list> List of similar domain names
     '''
     similar = []
-    # 1 Insert random alphabetic char:
+
     alphabet_string = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
                         'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
                         'w', 'x', 'y', 'z']
+    number_list = [1,2,3,4,5,6,7,8,9]
+
+    # 1 Insert random alphabetic char @ end:
     for i in alphabet_string:
         similar.append(sl_domain+i)
+
     # 2 Duplicate Char in middle of string:
-    # 3 Duplicate entire string
-    # 4 Add number
-    return similar
+    for i in range(len(sl_domain)-1):
+        toAdd = sl_domain[:i+1] + sl_domain[i] + sl_domain[i+1:]
+        similar.append(toAdd)
+
+    # 3 Duplicate entire string?
+
+    # 4 Add number @ end
+    for i in number_list:
+        similar.append(sl_domain+str(i))
+
+    # 5 Look alike numbers and letters
+    for i in range(len(sl_domain)-1):
+        if sl_domain[i] == '0':
+            #Replace zeros with Os
+            toAdd = sl_domain[:i] + "O" + sl_domain[i+1:]
+            similar.append(toAdd)
+        elif sl_domain[i] == 'o' or sl_domain[i] == 'O': #Capital or lower case
+            #Replace Os and os with zeros
+            toAdd = sl_domain[:i] + "0" + sl_domain[i+1:]
+            similar.append(toAdd)
+
+
+    for i in range(len(sl_domain)-1):
+        if sl_domain[i] == '1':
+            #Replace ones with l
+            toAdd = sl_domain[:i] + "l" + sl_domain[i+1:]
+            similar.append(toAdd)
+        elif sl_domain[i] == 'l' or sl_domain[i] == 'L': #Capital or lower case
+            #Replace l and L with ones
+            toAdd = sl_domain[:i] + "1" + sl_domain[i+1:]
+            similar.append(toAdd)
+
+    # We change at most 1 character in a url...
+
+    return similar[:min(len(similar), n)]
 
 def generate_similar_urls(url, num_similar, with_sub_domains = False, with_filename = False):
     '''
-    Creates a specified number of urls that are similar to the url provided.
+    Creates a specified number of urls that are similar to the url provided; assumes
+    url provided has been checked for validity.
 
     Args:
         url: <Str> a full url, starting with 'http' or 'https'
@@ -88,7 +133,6 @@ def generate_similar_urls(url, num_similar, with_sub_domains = False, with_filen
     Returns:
         output_urls: <list> containing <str> list of similar domain names
     '''
-    # TODO (1.0)
     # constraints:
     #   - same length
     #   - same top level domain: https://www.icann.org/resources/pages/tlds-2012-02-25-en
@@ -131,7 +175,7 @@ def generate_similar_urls(url, num_similar, with_sub_domains = False, with_filen
                             tl_domain = tl_domain,
                             filename=filename
                             )
-        else:
+        else: #Default
             url = build_url(
                             protocol = protocol,
                             sl_domain = new_sl_domain,
@@ -142,6 +186,14 @@ def generate_similar_urls(url, num_similar, with_sub_domains = False, with_filen
 
     return output_urls
 
+def generate_similar_strings(url):
+    # TODO (1.1)
+    return
+
+def generate_similar_payloads(url):
+    # TODO (2.0)
+    return
+
 # url = "https://www.geeksforgeeks.org/python-generate-random-string-of-given-length/"
 # print(is_valid_url(url))
-# print(generate_similar_urls(url, 2))
+# print(generate_similar_urls(url, 10))
