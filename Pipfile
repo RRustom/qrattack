@@ -4,11 +4,15 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-qrcodegen = "*"
 qrcode = {extras = ["pil"], version = "*"}
 pyzxing = "*"
 pyzbar = {extras = ["scripts"], version = "*"}
 numpy = "*"
+opencv-python = "*"
+six = "*"
+python-dateutil = "*"
+reedsolo = "*"
+requests = "*"
 
 [dev-packages]
 
