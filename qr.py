@@ -19,7 +19,6 @@ def get_ecc_level(qr):
 def get_ecc_level_value(ecc):
     return ECC_VALUES[ecc]
 
-
 def decode_qr_image(image_path):
     """Decodes the QR code at image_path
 
@@ -29,11 +28,6 @@ def decode_qr_image(image_path):
         A bytestring of data in QR code.
     """
     return decode(Image.open(image_path))[0].data
-
-# m = 'Hello, world!'
-# ecc = "QUARTILE"
-# mask = 0
-# version = 4
 
 def generate_qr_code(message, ecc, version, mask):
     """Generates QR code corresponding to message
@@ -50,8 +44,6 @@ def generate_qr_code(message, ecc, version, mask):
         message = message.decode("utf-8")
 
     return QrCode.encode_text(message, getattr(QrCode.Ecc, ecc), version, mask)
-
-# q = generate_qr_code(m, ecc, version, mask)
 
 def qr_matrix_rgb(qr):
     """Create an np.ndarray matrix from a QrCode object with RGB values
@@ -88,19 +80,11 @@ def qr_matrix(qr):
         matrix.append(row)
     return np.array(matrix)
 
-# m = qr_matrix(q)
-#
-# print(m)
-
 def qr_matrix_rgb_from_matrix(qr_matrix):
     size = qr_matrix.size
     qr_matrix = (1 - qr_matrix)*255
     m = qr_matrix.astype('uint8')
     return cv2.resize(m, dsize=(1000, 1000), interpolation=cv2.INTER_NEAREST)
-
-# rgb = qr_matrix_rgb_from_matrix(m)
-#
-# print(rgb)
 
 def decode_qr_matrix(qr_matrix):
     """Decode a binary matrix representation of a QR code (entries 0 or 1)
@@ -111,8 +95,6 @@ def decode_qr_matrix(qr_matrix):
         A bytestring of data in QR code.
     """
     qr_matrix = qr_matrix_rgb_from_matrix(qr_matrix)
-    # img = Image.fromarray(qr_matrix)
-    # img.show()
     try:
         [decoded] = decode(qr_matrix)
         if decoded.data:
@@ -120,14 +102,6 @@ def decode_qr_matrix(qr_matrix):
     except:
         return False
     return False
-
-# def can_be_decoded(qr_matrix):
-#     """
-#     """
-#     #(height, width) = qr_matrix.shape
-#     if generate_qr_from_matrix(qr_matrix):
-#         return True
-#     return False
 
 def qr_to_svg(qr):
     # TODO
@@ -137,6 +111,17 @@ def show_qr_diff(qr0, qr1):
     # TODO
     return
 
+# TEST
+
+# m = 'Hello, world!'
+# ecc = "QUARTILE"
+# mask = 0
+# version = 4
+# q = generate_qr_code(m, ecc, version, mask)
+# m = qr_matrix(q)
+# print(m)
+# rgb = qr_matrix_rgb_from_matrix(m)
+# print(rgb)
 # img = Image.fromarray(rgb)
 # img.show()
 

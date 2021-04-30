@@ -24,8 +24,6 @@ def generate_malicious_qr(image_path):
     if not url.is_valid_url(m0):
         return "Not a valid URL"
 
-    print("m0: ", m0)
-
     # TODO: get Error correction of m0: https://github.com/ewino/qreader
 
     # original QR code (QrCode object)
@@ -33,7 +31,6 @@ def generate_malicious_qr(image_path):
     mask= 0
     q0 = qr.generate_qr_code(m0, "MEDIUM", version, mask)
     ecc = qr.get_ecc_level(q0) # TODO: or just use whatever we decode?
-    print("ecc level: ", ecc)
 
     print("q0 size: ", q0.get_size())
     print("q0 size: ", q0.get_size())
@@ -46,38 +43,25 @@ def generate_malicious_qr(image_path):
     # similar to the origi- nal one, e.g. by systematically changing characters
     # in the original URL).
     messages = url.generate_similar_urls(m0, 10, True, True) #[:10]
-    print("# messages: ", messages)
-
-
-    #print("similar messages: ", messages)
+    print("messages: ", messages)
 
     # 3. Generate the corresponding QR codes Qi for the messages Mi, i = 1,...,n.
     # The new QR codes should use the same version and mask as the original QR code,
     # so no changes in these regions of the Code need to be done.
     qr_codes = [qr.generate_qr_code(message, ecc, version, mask) for message in messages]
-    #print("qr codes: ", qr_codes)
-    # for qi in qr_codes[:5]:
-    #     print("     qi size: ", qi.get_size())
-    #     print("     qi version: ", qi.get_version())
-    #     print("     qi mask: ", qi.get_mask())
-    #     print("     qi ecc: ", qr.get_ecc_level(qi))
-    #     print("\n")
 
     # 4. Construct the symmetric difference Di of the generated QR code to the original,
     # for each q_i in qr_codes
     symmetric_diffs = [symmetric_diff(q0, q_i) for q_i in qr_codes]
-    #print("symmetric diffs: ", symmetric_diffs)
 
     # 5. Calculate the ratios ri of modules in the symmetric differences that
     # indicate a change from white to black
     symmetric_diff_ratios = [calculate_difference_ratio(sd) for sd in symmetric_diffs]
-    #print("symmetric diffs ratios: ", symmetric_diff_ratios)
 
     # 6. Order the QR codes by ratio ri, descending. Codes where the number of codewords
     # (not modules) that need to get changed from black to white is higher than the error-
     # correcting capacity of the code can be omitted
     ordered_codes = order_codes_by_ratio(qr_codes, symmetric_diff_ratios, ecc)
-    #print("ordered codes: ", ordered_codes)
 
     # 7. Start with the first QR code Q1 (now sorted) and color white modules of Q0 that are black in Q1 black.
     # Check after every module, whether the meaning of the QR code can be decoded
@@ -102,7 +86,7 @@ def generate_malicious_qr(image_path):
     # modules in the symmetric difference Di is greater than the number of errors
     # that can be corrected by the BCH-encoding (b).
 
-    return
+    return valid_codes
 
 # Lindsey
 def symmetric_diff(qr_0, qr_i):
@@ -226,25 +210,5 @@ def verify_solution(q0, m0, ordered_qr_codes):
             valid_codes.append(qx_prime)
 
     return valid_codes
-
-
-#
-
-# url = 'https://upload.wikimedia.org/wikipedia/commons/8/8f/Qr-2.png'
-# data = qreader.read(urlopen(url))
-#
-# #data = qreader.read('./tests/target/rickroll.png')
-#
-# print(data)
-
-# a = getattr(QrCode.Ecc, "LOW")
-# b = getattr(QrCode.Ecc, "MEDIUM")
-# c = getattr(QrCode.Ecc, "QUARTILE")
-# d = getattr(QrCode.Ecc, "HIGH")
-#
-# print(a.ordinal)
-# print(b.ordinal)
-# print(c.ordinal)
-# print(d.ordinal)
 
 generate_malicious_qr('./tests/target/rickroll.png')
