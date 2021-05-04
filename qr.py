@@ -3,6 +3,9 @@ import numpy as np
 from pyzbar.pyzbar import decode
 from PIL import Image
 import cv2
+import tempfile
+# import shutil
+from pyzxing import BarCodeReader
 
 ECC = ["LOW", "MEDIUM", "QUARTILE", "HIGH"]
 
@@ -94,23 +97,42 @@ def decode_qr_matrix(qr_matrix):
     Returns:
         A bytestring of data in QR code.
     """
-    qr_matrix = qr_matrix_rgb_from_matrix(qr_matrix)
+    #try:
+    qr_matrix_rgb = qr_matrix_rgb_from_matrix(qr_matrix)
+    image = Image.fromarray(qr_matrix_rgb)
+
+    fp = tempfile.NamedTemporaryFile(suffix=".png")
+    image.save(fp.name)
+
     try:
-        [decoded] = decode(qr_matrix)
-        if decoded.data:
-            return decoded.data
+        reader = BarCodeReader()
+        [results] = reader.decode(fp.name)
+        if results:
+            # shutil.copy(f.name, 'new-name')
+            fp.close()
+            return results['parsed'].decode("utf-8")
     except:
+        fp.close()
         return False
+
+    fp.close()
     return False
 
-def qr_to_svg(qr):
-    # TODO
-    return
+def qr_matrix_image(qr_matrix, image_path, show=False):
+    rgb_matrix = qr_matrix_rgb_from_matrix(qr_matrix)
+    img = Image.fromarray(rgb_matrix)
+    img.save(image_path)
+    if show:
+        img.show()
 
-def show_qr_diff(qr0, qr1):
-    # TODO
-    return
-
+def qr_diff(qr0_matrix, qr1_matrix):
+    # TODO: add color
+    size = qr0_matrix.size
+    qr0_matrix = (1 - qr0_matrix)*255
+    qr1_matrix = (1 - qr1_matrix)*255
+    black_diff = qr1_matrix - qr0_matrix
+    m = black_diff.astype('uint8')
+    return cv2.resize(m, dsize=(1000, 1000), interpolation=cv2.INTER_NEAREST)
 # TEST
 
 # m = 'Hello, world!'

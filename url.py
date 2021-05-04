@@ -1,3 +1,6 @@
+from urllib.parse import urlparse
+import random
+
 # Eric
 def is_valid_url(url):
     '''
@@ -51,14 +54,49 @@ def parse_url(url):
             filename: <str> any filename on the website
     '''
     try:
-        protocol, hostname_filename = url.split('://') # Extract http vs https
-        hostname, filename = hostname_filename.split('/', 1) # Separate host from filename
-        sub_domains, sl_domain, tl_domain = hostname.rsplit('.',2) # Separate layers of domains
-        return protocol, sub_domains, sl_domain, tl_domain, filename
+        parsed = urlparse(url)
+        print("PARSED: ", parsed)
+        protocol = parsed.scheme
+        netloc = parsed.netloc
+        path = parsed.path
+
+        domains = netloc.rsplit('.',2) # Separate layers of domains
+        return protocol, domains, path
 
     except:
         print("Failed to Parse URL:" + url)
         return None
+
+def similar_sl_domains_random(sl_domain, n, n_replace=-1):
+    """
+    Creates n number of similar second level domain names.
+
+    Args:
+        sl_domain: <Str> Second level domain name
+        n: <int> number of second level domain names to create
+        n_replace: <int> number of characters to replace. If < 0, then randomize
+    Returns:
+        similar: <list> List of similar domain names
+    """
+    similar = []
+    replacements = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
+                    'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+                    'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7',
+                    '8', '9', '0', '-', '']
+
+    # guarantee n results
+    while len(similar) < n:
+        final = sl_domain
+        if n_replace < 0:
+            n_replace = random.randint(1, len(sl_domain)-1)
+        for j in range(n_replace):
+            replace_index = random.randint(0, len(sl_domain)-1)
+            # choose a random replacement character
+            index = random.randint(0, len(replacements)-1)
+            final = final[:replace_index] + replacements[index] + final[replace_index+1:]
+            if final != sl_domain:  # in the off chance the outcome is the same
+                similar.append(final)
+    return similar
 
 
 
@@ -141,13 +179,20 @@ def generate_similar_urls(url, num_similar, with_sub_domains = False, with_filen
     #   - maybe check if URL is available?
 
     #Split url input into key components
-    protocol, sub_domains, sl_domain, tl_domain, filename = parse_url(url)
+    protocol, domains, filename = parse_url(url)
+
+    if len(domains) == 3:
+        sub_domains, sl_domain, tl_domain = domains
+    elif len(domains) == 2:
+        sl_domain, tl_domain = domains
+        sub_domains = ""
+
 
     #Init empty list to store output
     output_urls = []
 
     #Generate similar sl_domains
-    similar = similar_sl_domains(sl_domain = sl_domain, n = num_similar)
+    similar = similar_sl_domains_random(sl_domain, num_similar)
 
     # iterate through similar urls
     for i in similar:
@@ -196,4 +241,11 @@ def generate_similar_payloads(url):
 
 # url = "https://www.geeksforgeeks.org/python-generate-random-string-of-given-length/"
 # print(is_valid_url(url))
-# print(generate_similar_urls(url, 10))
+
+#
+# m = 'youtube'
+# mes = similar_sl_domains_random(m, 10, 2)
+# m = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+# mes = generate_similar_urls(m, 100)
+# print(len(mes))
+# print(mes)

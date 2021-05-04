@@ -2,8 +2,6 @@ from qrcodegen import *
 import numpy as np
 from pyzbar.pyzbar import decode
 from PIL import Image
-import qreader.qreader as qreader
-# from urllib.request import urlopen
 
 import qr
 import url
@@ -24,12 +22,14 @@ def generate_malicious_qr(image_path):
     if not url.is_valid_url(m0):
         return "Not a valid URL"
 
+    #m0 = "http://yahoo.at"
+
     # TODO: get Error correction of m0: https://github.com/ewino/qreader
 
     # original QR code (QrCode object)
-    version = 4
-    mask= 0
-    q0 = qr.generate_qr_code(m0, "MEDIUM", version, mask)
+    version = 1
+    mask= 7
+    q0 = qr.generate_qr_code(m0, "LOW", version, mask)
     ecc = qr.get_ecc_level(q0) # TODO: or just use whatever we decode?
 
     print("q0 size: ", q0.get_size())
@@ -43,6 +43,8 @@ def generate_malicious_qr(image_path):
     # similar to the origi- nal one, e.g. by systematically changing characters
     # in the original URL).
     messages = url.generate_similar_urls(m0, 10, True, True) #[:10]
+    #messages = ['http://yghqo.at']
+    print("messages: ", len(messages))
     print("messages: ", messages)
 
     # 3. Generate the corresponding QR codes Qi for the messages Mi, i = 1,...,n.
@@ -79,12 +81,14 @@ def generate_malicious_qr(image_path):
     # Dx = Q0 XOR Qx,
     # Qx = code in qr_codes
 
-    valid_codes = verify_solution(q0, m0, ordered_codes)
+    valid_codes = verify_solution(q0, m0, ordered_codes, image_path)
     print("valid codes: ", valid_codes)
 
     # 8. The last step can be repeated for all Qi where the number of black
     # modules in the symmetric difference Di is greater than the number of errors
     # that can be corrected by the BCH-encoding (b).
+
+    # TODO
 
     return valid_codes
 
@@ -159,7 +163,7 @@ def order_codes_by_ratio(qr_codes, symmetric_diff_ratios, ecc):
     return valid
 
 # Rami
-def verify_solution(q0, m0, ordered_qr_codes):
+def verify_solution(q0, m0, ordered_qr_codes, image_path):
     """
 
     Args:
@@ -187,28 +191,38 @@ def verify_solution(q0, m0, ordered_qr_codes):
 
     q0 = qr.qr_matrix(q0)
 
+    decoded = qr.decode_qr_matrix(q0)
+    # print("DECODED q0: ", decoded)
+    # qr.qr_matrix_image(q0, './tests/malicious/q0.png')
+
     valid_codes = []
 
+    i = 0
     for qi in ordered_qr_codes:
-        # rgb = qr.qr_matrix_rgb(qi)
-        # img = Image.fromarray(rgb)
-        # img.show()
+        rgb = qr.qr_matrix_rgb(qi)
         # color white modules of Q0 that are black in Q1 black. (element wise OR)
         qx = qr.qr_matrix(qi)
-        # img = Image.fromarray(qx)
-        # img.show()
+        #qr.qr_matrix_image(qx, './tests/malicious/qx_' + str(i) + '.png')
         dx = np.logical_xor(q0, qx)
+        #qr.qr_matrix_image(dx, './tests/malicious/dx_' + str(i) + '.png')
         rx = np.logical_and(qx, dx)
+        #qr.qr_matrix_image(rx, './tests/malicious/rx_' + str(i) + '.png')
         qx_prime = np.logical_or(q0, rx)
+        #qr.qr_matrix_image(qx_prime, './tests/malicious/qx_prime_' + str(i) + '.png')
+
+        diff = qr.qr_diff(q0, qx_prime)
+        #qr.qr_matrix_image(diff, './tests/malicious/diff_' + str(i) + '.png')
 
         # Check after every module, whether the meaning of the QR code can be decoded
         # and results in a different message than the original.
+        i += 1
         decoded = qr.decode_qr_matrix(qx_prime)
         if not decoded:
             continue
         if decoded != m0:
-            valid_codes.append(qx_prime)
+            qr.qr_matrix_image(qx_prime, './tests/malicious/' + image_path + '.png')
+            valid_codes.append(decoded)
 
     return valid_codes
 
-generate_malicious_qr('./tests/target/rickroll.png')
+generate_malicious_qr('./tests/target/yahoo.png')
