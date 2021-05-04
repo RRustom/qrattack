@@ -55,7 +55,6 @@ def parse_url(url):
     '''
     try:
         parsed = urlparse(url)
-        print("PARSED: ", parsed)
         protocol = parsed.scheme
         netloc = parsed.netloc
         path = parsed.path

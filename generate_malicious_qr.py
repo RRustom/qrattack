@@ -2,6 +2,11 @@ from qrcodegen import *
 import numpy as np
 from pyzbar.pyzbar import decode
 from PIL import Image
+import os
+#import multiprocessing as mp
+import threading
+import concurrent.futures
+import time
 
 import qr
 import url
@@ -22,30 +27,16 @@ def generate_malicious_qr(image_path):
     if not url.is_valid_url(m0):
         return "Not a valid URL"
 
-    #m0 = "http://yahoo.at"
-
-    # TODO: get Error correction of m0: https://github.com/ewino/qreader
-
-    # original QR code (QrCode object)
-    version = 1
-    mask= 7
-    q0 = qr.generate_qr_code(m0, "LOW", version, mask)
-    ecc = qr.get_ecc_level(q0) # TODO: or just use whatever we decode?
-
-    print("q0 size: ", q0.get_size())
-    print("q0 size: ", q0.get_size())
-    print("q0 version: ", q0.get_version())
-    print("q0 mask: ", q0.get_mask())
-    print("q0 ecc: ", qr.get_ecc_level(q0))
+	# TODO: make this more efficient:
+	start_qr_info = time.time()
+    ecc, version, mask = qr.get_qr_info(image_path)
+	print("Time to find QR info: ", time.time() - start_qr_info)
 
     # 2. Generate several messages Mi, i = 1,...,n, that contain URLs to possible
     # phishing sites (the new messages are generated in a way to make them look
     # similar to the origi- nal one, e.g. by systematically changing characters
     # in the original URL).
-    messages = url.generate_similar_urls(m0, 10, True, True) #[:10]
-    #messages = ['http://yghqo.at']
-    print("messages: ", len(messages))
-    print("messages: ", messages)
+    messages = url.generate_similar_urls(m0, 10000, True, True)
 
     # 3. Generate the corresponding QR codes Qi for the messages Mi, i = 1,...,n.
     # The new QR codes should use the same version and mask as the original QR code,
@@ -71,17 +62,10 @@ def generate_malicious_qr(image_path):
     # coloring is found (for the first b elements the check can be omitted,
     # where b denotes the number of errors the BCH-encoding is capable of correcting plus one.
     # If the resulting code Q′i can get decoded to message Mi, a solution was found.
-    # In step seven, the following optimization can be used:
-    # Instead of coloring module by module, we simply change all modules that can be
-    # changed by only using black color at once and thus generate Q′x by applying
-    # the fast and simple element-wise OR-function: Q'x = Q0 OR Rx, (OR = element-wise OR)
-    # Q0 = target code,
-    # Q'x = generated code,
-    # Rx = Qx AND Dx (AND = element-wise AND)
-    # Dx = Q0 XOR Qx,
-    # Qx = code in qr_codes
-
-    valid_codes = verify_solution(q0, m0, ordered_codes, image_path)
+    image_name = os.path.basename(image_path)
+	start_verify = time.time()
+    valid_codes = verify_solution(q0, m0, ordered_codes, image_name)
+	print("Time to find valid QR: ", time.time() - start_verify)
     print("valid codes: ", valid_codes)
 
     # 8. The last step can be repeated for all Qi where the number of black
@@ -92,7 +76,6 @@ def generate_malicious_qr(image_path):
 
     return valid_codes
 
-# Lindsey
 def symmetric_diff(qr_0, qr_i):
     """Calculates symmetric difference between 2 QR codes
 
@@ -120,7 +103,6 @@ def symmetric_diff(qr_0, qr_i):
                 symmetric_diffs[qr_0_color].append((x,y)) # make sure black/white interpretation is correct here linds!
     return symmetric_diffs
 
-# Lindsey
 def calculate_difference_ratio(symmetric_diffs):
     """Calculates ratio of size of symmetric_diff[0] to total elems in symmetric_diff
 
@@ -138,7 +120,6 @@ def calculate_difference_ratio(symmetric_diffs):
     combined_lists = [pair for sublist in symmetric_diffs for pair in sublist]
     return len(symmetric_diffs[0])/len(combined_lists)
 
-# Rami (step 6)
 def order_codes_by_ratio(qr_codes, symmetric_diff_ratios, ecc):
     """Order qr_codes by symmetric_diff ratio r_i in descending order
 
@@ -162,8 +143,31 @@ def order_codes_by_ratio(qr_codes, symmetric_diff_ratios, ecc):
             valid.append(qr_code)
     return valid
 
-# Rami
-def verify_solution(q0, m0, ordered_qr_codes, image_path):
+def is_code_valid(q0, m0, qi):
+    rgb = qr.qr_matrix_rgb(qi)
+    # color white modules of Q0 that are black in Q1 black. (element wise OR)
+    qx = qr.qr_matrix(qi)
+    #qr.qr_matrix_image(qx, './tests/malicious/qx_' + str(i) + '.png')
+    dx = np.logical_xor(q0, qx)
+    #qr.qr_matrix_image(dx, './tests/malicious/dx_' + str(i) + '.png')
+    rx = np.logical_and(qx, dx)
+    #qr.qr_matrix_image(rx, './tests/malicious/rx_' + str(i) + '.png')
+    qx_prime = np.logical_or(q0, rx)
+    #qr.qr_matrix_image(qx_prime, './tests/malicious/qx_prime_yahoo_' + str(i) + '.png')
+
+    diff = qr.qr_diff(q0, qx_prime)
+    #qr.qr_matrix_image(diff, './tests/malicious/diff_' + str(i) + '.png')
+
+    # Check after every module, whether the meaning of the QR code can be decoded
+    # and results in a different message than the original.
+    decoded = qr.decode_qr_matrix(qx_prime)
+    if not decoded:
+        return
+    if decoded != m0:
+        qr.qr_matrix_image(qx_prime, 'tests/malicious/' + image_name)
+        return decoded
+
+def verify_solution(q0, m0, ordered_qr_codes, image_name):
     """
 
     Args:
@@ -192,37 +196,15 @@ def verify_solution(q0, m0, ordered_qr_codes, image_path):
     q0 = qr.qr_matrix(q0)
 
     decoded = qr.decode_qr_matrix(q0)
-    # print("DECODED q0: ", decoded)
-    # qr.qr_matrix_image(q0, './tests/malicious/q0.png')
 
     valid_codes = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
+        futures = []
+        for qi in ordered_qr_codes:
+            futures.append(executor.submit(is_code_valid, q0, m0, qi))
+        for future in concurrent.futures.as_completed(futures):
+            valid_codes.append(future.result())
 
-    i = 0
-    for qi in ordered_qr_codes:
-        rgb = qr.qr_matrix_rgb(qi)
-        # color white modules of Q0 that are black in Q1 black. (element wise OR)
-        qx = qr.qr_matrix(qi)
-        #qr.qr_matrix_image(qx, './tests/malicious/qx_' + str(i) + '.png')
-        dx = np.logical_xor(q0, qx)
-        #qr.qr_matrix_image(dx, './tests/malicious/dx_' + str(i) + '.png')
-        rx = np.logical_and(qx, dx)
-        #qr.qr_matrix_image(rx, './tests/malicious/rx_' + str(i) + '.png')
-        qx_prime = np.logical_or(q0, rx)
-        #qr.qr_matrix_image(qx_prime, './tests/malicious/qx_prime_' + str(i) + '.png')
-
-        diff = qr.qr_diff(q0, qx_prime)
-        #qr.qr_matrix_image(diff, './tests/malicious/diff_' + str(i) + '.png')
-
-        # Check after every module, whether the meaning of the QR code can be decoded
-        # and results in a different message than the original.
-        i += 1
-        decoded = qr.decode_qr_matrix(qx_prime)
-        if not decoded:
-            continue
-        if decoded != m0:
-            qr.qr_matrix_image(qx_prime, './tests/malicious/' + image_path + '.png')
-            valid_codes.append(decoded)
-
-    return valid_codes
+    return [code for code in valid_codes if code]
 
 generate_malicious_qr('./tests/target/yahoo.png')
