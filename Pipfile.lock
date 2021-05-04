@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e1bb16e19d07308b9b5c0a2de5781158d1827d77e901108bc05f39ca114fc915"
+            "sha256": "ccb8ab1d6909ead23ea5303c353d52744a5d9c2b2d2dea0f7cd28f5c626088d2"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -38,14 +38,6 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==2.10"
-        },
-        "joblib": {
-            "hashes": [
-                "sha256:9c17567692206d2f3fb9ecf5e991084254fe631665c450b443761c4186a613f7",
-                "sha256:feeb1ec69c4d45129954f1b7034954241eedfd6ba39b5e9e4b6883be3332d5e5"
-            ],
-            "markers": "python_version >= '3.6'",
-            "version": "==1.0.1"
         },
         "numpy": {
             "hashes": [
@@ -165,14 +157,6 @@
             ],
             "index": "pypi",
             "version": "==0.1.8"
-        },
-        "pyzxing": {
-            "hashes": [
-                "sha256:89defa1544879844d1a82b5052e886c274731d13b65ec5044ec927dc97bb1028",
-                "sha256:c402aa7f23aeed1e5d4681b8a9cfbcb673d9c7d9848a28f0c96f458e7fa17e38"
-            ],
-            "index": "pypi",
-            "version": "==1.0.1"
         },
         "qrcode": {
             "extras": [

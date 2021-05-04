@@ -1,8 +1,10 @@
 from qrcodegen.qrcodegen import *
 import numpy as np
-from pyzbar.pyzbar import decode
 from PIL import Image
 import cv2
+import tempfile
+import zxingcpp
+import time
 
 ECC = ["LOW", "MEDIUM", "QUARTILE", "HIGH"]
 
@@ -12,6 +14,38 @@ ECC_VALUES = {
     "QUARTILE": 0.25,
     "HIGH": 0.3
 }
+
+QR_CODE_MIN_VERSION = 1
+QR_CODE_MAX_VERSION = 40
+QR_CODE_MIN_MASK = 0
+QR_CODE_MAX_MASK = 7
+
+def get_qr_info(image_path):
+	"""Get Error Correction leve, QR Code Version, and Mask from QR image
+
+    Args:
+        image_path: path of image (png)
+    Returns:
+        ecc: one of ECC_VALUES
+		version: version between QR_CODE_MIN_VERSION and QR_CODE_MAX_VERSION (inclusive)
+		mask: mask between QR_CODE_MIN_MASK and QR_CODE_MAX_MASK (inclusive)
+    """
+    result = zxingcpp.read_barcode(cv2.imread(image_path))
+    message = result.text
+    image = Image.open(p)
+    q0 = np.asarray(image)
+
+    for ecc in ["LOW", "MEDIUM", "QUARTILE", "HIGH"]:
+        for version in range(QR_CODE_MIN_VERSION, QR_CODE_MAX_VERSION + 1):
+            for mask in range(QR_CODE_MIN_MASK, QR_CODE_MAX_MASK + 1):
+                try:
+                    qi = generate_qr_code(message, ecc, version, mask)
+                    qi_matrix = qr_matrix_rgb(qi)
+                    if np.array_equal(q0, qi_matrix):
+                        return ecc, version, mask
+                except:
+                    continue
+    return "Could not parse info"
 
 def get_ecc_level(qr):
     return ECC[qr.get_error_correction_level().ordinal]
@@ -27,7 +61,9 @@ def decode_qr_image(image_path):
     Returns:
         A bytestring of data in QR code.
     """
-    return decode(Image.open(image_path))[0].data
+    img = cv2.imread(image_path)
+    result = zxingcpp.read_barcode(img)
+    return result.text
 
 def generate_qr_code(message, ecc, version, mask):
     """Generates QR code corresponding to message
@@ -94,47 +130,114 @@ def decode_qr_matrix(qr_matrix):
     Returns:
         A bytestring of data in QR code.
     """
-    qr_matrix = qr_matrix_rgb_from_matrix(qr_matrix)
-    try:
-        [decoded] = decode(qr_matrix)
-        if decoded.data:
-            return decoded.data
-    except:
-        return False
+    qr_matrix_rgb = qr_matrix_rgb_from_matrix(qr_matrix)
+
+    image = Image.fromarray(qr_matrix_rgb)
+
+    fp = tempfile.NamedTemporaryFile(suffix=".png")
+    image.save(fp.name)
+
+    img = cv2.imread(fp.name)
+    result = zxingcpp.read_barcode(img)
+    if result.valid:
+        #print("Found barcode with value '{}' (format: {})".format(result.text, str(result.format)))
+        fp.close()
+        return result.text
+
+    fp.close()
     return False
 
-def qr_to_svg(qr):
-    # TODO
-    return
+def qr_matrix_image(qr_matrix, image_path, show=False):
+	"""Save a PNG of qr_matrix at image_path
 
-def show_qr_diff(qr0, qr1):
-    # TODO
-    return
+    Args:
+        qr_matrix: np.ndarray matrix representation of QR code
+		image_path: path to PNG
+		show: boolean to open image
+    """
+    rgb_matrix = qr_matrix_rgb_from_matrix(qr_matrix)
+    img = Image.fromarray(rgb_matrix)
+    img.save(image_path)
+    if show:
+        img.show()
 
-# TEST
+def qr_diff(qr0_matrix, qr1_matrix):
+    """Calculate the difference between two QR code matrixes
 
-# m = 'Hello, world!'
-# ecc = "QUARTILE"
-# mask = 0
-# version = 4
-# q = generate_qr_code(m, ecc, version, mask)
-# m = qr_matrix(q)
-# print(m)
-# rgb = qr_matrix_rgb_from_matrix(m)
-# print(rgb)
-# img = Image.fromarray(rgb)
-# img.show()
-
-
-# # svg = qr0.to_svg_str(4)
+    Args:
+        qr0_matrix: np.ndarray matrix representation of QR code
+		qr1_matrix: np.ndarray matrix representation of QR code
+    Returns:
+        qr1_matrix - qr0_matrix
+    """
+    size = qr0_matrix.size
+    qr0_matrix = (1 - qr0_matrix)*255
+    qr1_matrix = (1 - qr1_matrix)*255
+    black_diff = qr1_matrix - qr0_matrix
+    m = black_diff.astype('uint8')
+    return cv2.resize(m, dsize=(1000, 1000), interpolation=cv2.INTER_NEAREST)
+# # TEST
+#
+# # m = 'Hello, world!'
+# # ecc = "QUARTILE"
+# # mask = 0
+# # version = 4
+# # q = generate_qr_code(m, ecc, version, mask)
+# # m = qr_matrix(q)
+# # print(m)
+# # rgb = qr_matrix_rgb_from_matrix(m)
+# # print(rgb)
+# # img = Image.fromarray(rgb)
+# # img.show()
+#
+#
+# # # svg = qr0.to_svg_str(4)
+# # #
+# # output_file = open("qr_test.txt", 'w+')
 # #
-# output_file = open("qr_test.txt", 'w+')
+# # for y in range(qr.get_size()):
+# #     for x in range(qr.get_size()):
+# #         module = qr.get_module(x, y)
+# #         b = 1 if module else 0
+# #         output_file.write(str(b) + " ")
+# #     output_file.write("\n")
+# #
+# # output_file.close()
 #
-# for y in range(qr.get_size()):
-#     for x in range(qr.get_size()):
-#         module = qr.get_module(x, y)
-#         b = 1 if module else 0
-#         output_file.write(str(b) + " ")
-#     output_file.write("\n")
 #
-# output_file.close()
+# p = 'tests/target/rickroll_large.png'
+# start = time.time()
+# print(get_qr_info(p))
+# print("TIME: ", time.time() - start)
+#
+# # m = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+# # ecc = "MEDIUM"
+# # mask = 7
+# # version = 39
+# # q = generate_qr_code(m, ecc, version, mask)
+# # qm = qr_matrix(q)
+# # qr_matrix_image(qm, 'tests/target/rickroll_1.png')
+#
+#
+# # #m0 = qr.decode_qr_image(image_path)
+# # img = cv2.imread(p)
+# # img_matrix = np.resize(img, (1000, 1000))
+# # print("OLD SHAPE: ", img_matrix.shape)
+# # #print(img_matrix)
+# #
+# # image = Image.open(p)
+# # old = np.asarray(image)
+# # print(old)
+# #
+# # version = 1
+# # mask= 7
+# # m0 = "http://yahoo.at"
+# # q0 = generate_qr_code(m0, "LOW", version, mask)
+# # q0_matrix = qr_matrix_rgb(q0)
+# # #qr_matrix_image(q0_matrix, 'tests/malicious/yahoo_m.png')
+# # print("NEW SHAPE: ", q0_matrix.shape)
+# # print(q0_matrix)
+# #
+# # print("EQUAL: ", np.array_equal(q0_matrix, old))
+#
+# #return result.text
