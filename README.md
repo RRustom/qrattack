@@ -25,10 +25,16 @@ TODO Rami:
 - use https://github.com/ewino/qreader to get EC level from qr code
 - finish verify_solution
 - generate image that shows which codes to change
-DONE - generate from matrix 
+DONE - generate from matrix
 - run full pass
 
 Research:
 - experiment with normal vs qr codes with modifications, see what people do
 - survey restaurants/coffee shops/bars about their qr code usage
 - deploy in restaurants, see how many people fall for it
+
+## Resources
+- https://www.digitalocean.com/community/tutorials/how-to-use-threadpoolexecutor-in-python-3
+- https://github.com/lincolnloop/python-qrcode
+- https://www.youtube.com/watch?v=qnq0UfOUTlM
+- https://github.com/lincolnloop/python-qrcode
