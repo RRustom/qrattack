@@ -32,14 +32,34 @@
 4. Improve URL generation (random vs brute force) + multiprocessing: https://www.quantstart.com/articles/Parallelising-Python-with-Threading-and-Multiprocessing/
 5. More robust image scanning
 6. Add camera scanner
-7. Generate any payload
-8. Investigate tampering techniques
-9. Setup script
+7. Setup backend service + HTTP server
+8. Generate any payload
+9. Investigate tampering techniques
+10. Setup script
 
 ### Research
 1. How to know if people don't scan in restaurant?
 2. Setup infra for dorm + restaurant tests
 3. Get in touch with restaruants @RRustom
+
+## TODO 07/5/2021
+### Experiment
+1. Get in touch with restaurants in Central/Kendall/Harvard this weekend
+2. Set up infra restaurant + dorm testing.
+	- dorm:
+		- talk to people in dorms
+		- design poster
+		- ideas
+			1. Google form with info about QR codes/random questions
+			2. set up a server and count the number of visits
+		- distribute posters
+	- restaurant:
+		- talk to restaurants
+		- setup server and count visits
+		- Talk to LAs about how to best count baseline # QR scans
+### Code
+1. Work on decoding optimizations @RRustom
+
 
 ## Resources
 - https://www.digitalocean.com/community/tutorials/how-to-use-threadpoolexecutor-in-python-3
