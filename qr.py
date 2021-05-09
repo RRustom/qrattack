@@ -21,7 +21,7 @@ QR_CODE_MIN_MASK = 0
 QR_CODE_MAX_MASK = 7
 
 def get_qr_info(image_path):
-	"""Get Error Correction leve, QR Code Version, and Mask from QR image
+    """Get Error Correction leve, QR Code Version, and Mask from QR image
 
     Args:
         image_path: path of image (png)
@@ -32,7 +32,7 @@ def get_qr_info(image_path):
     """
     result = zxingcpp.read_barcode(cv2.imread(image_path))
     message = result.text
-    image = Image.open(p)
+    image = Image.open(image_path)
     q0 = np.asarray(image)
 
     for ecc in ["LOW", "MEDIUM", "QUARTILE", "HIGH"]:
@@ -132,23 +132,23 @@ def decode_qr_matrix(qr_matrix):
     """
     qr_matrix_rgb = qr_matrix_rgb_from_matrix(qr_matrix)
 
-    image = Image.fromarray(qr_matrix_rgb)
-
-    fp = tempfile.NamedTemporaryFile(suffix=".png")
-    image.save(fp.name)
-
-    img = cv2.imread(fp.name)
-    result = zxingcpp.read_barcode(img)
+    # image = Image.fromarray(qr_matrix_rgb)
+	#
+    # fp = tempfile.NamedTemporaryFile(suffix=".png")
+    # image.save(fp.name)
+	#
+    # img = cv2.imread(fp.name)
+    result = zxingcpp.read_barcode(qr_matrix_rgb)
     if result.valid:
         #print("Found barcode with value '{}' (format: {})".format(result.text, str(result.format)))
-        fp.close()
+        #fp.close()
         return result.text
 
-    fp.close()
+    #fp.close()
     return False
 
 def qr_matrix_image(qr_matrix, image_path, show=False):
-	"""Save a PNG of qr_matrix at image_path
+    """Save a PNG of qr_matrix at image_path
 
     Args:
         qr_matrix: np.ndarray matrix representation of QR code
