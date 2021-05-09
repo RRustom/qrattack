@@ -5,7 +5,7 @@
 1. `pipenv install`
 2. `brew install cmake`
 3. `git clone https://github.com/nu-book/zxing-cpp.git`
-4. `cd zxingcpp`
+4. Rename `zxing-cpp` to `zxingcpp` then `cd zxingcpp`
 5. `cmake CMakeLists.txt`
 6. `cd ..`
 7. `python generate_malicious_qr.py` to test it

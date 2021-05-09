@@ -5,7 +5,6 @@ name = "pypi"
 
 [packages]
 qrcode = {extras = ["pil"], version = "*"}
-pyzbar = {extras = ["scripts"], version = "*"}
 numpy = "*"
 opencv-python = "*"
 six = "*"
