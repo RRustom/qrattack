@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "lib": ["es2017"],
+    "target": "es6",
+    "typeRoots": [
+      "../node_modules/@types",
+      "../src/common",
+      "./types"
+    ]
+  },
+  "files": [
+    "./generate-test-data.ts"
+  ]
+}
