@@ -13,41 +13,18 @@ import qr
 import url
 import hamming
 
-def generate_malicious_qr(image_path):
+def generate_malicious_qr(m0, ecc, version, mask):
     # 1. Scan the QR code (Q0) with a mobile device capable of decoding QR codes
     # and re- trieve the corresponding Message M0.
     # For the rest of the paper we assume that M0 is a URL to a website.
 
-    # try:
-    #     m0 = qr.decode_qr_image(image_path)
-    # except:
-    #     return "Error reading from " + image_path
-    #
-    # print("m0: ", m0)
-    # #m0 = m0.decode("utf-8")
-    #
-    # # TODO: verify URL
-    # if not url.is_valid_url(m0):
-    #     return "Not a valid URL"
-    #
-    # # TODO: make this more efficient:
-    # start_qr_info = time.time()
-    # ecc, version, mask = qr.get_qr_info(image_path)
-    # print(ecc, version, mask)
-    # print("Time to find QR info: ", time.time() - start_qr_info)
-
-    image_path = './tests/target/mit_short.png'
-    m0 = 'mit.edu'#"http://cic-health.com"
-    m1 = "cic-health.com"
-    ecc = 'MEDIUM'
-    version = 1
-    mask = 7
+    image_path = './tests/target/result.png'
 
     q0 = qr.generate_qr_code(m0, ecc, version, mask)
     q0 = qr.qr_matrix(q0)
 
     # try for each hamming distance
-    for i in range(1, len(m0)):
+    for i in range(1, len(m1)):
         print(">>>>HAMMING DISTANCE: ", i)
         # 2. Generate several messages Mi, i = 1,...,n, that contain URLs to possible
         # phishing sites (the new messages are generated in a way to make them look
@@ -55,7 +32,7 @@ def generate_malicious_qr(image_path):
         # in the original URL).
         start_m = time.time()
         print("Generating messages...")
-        messages = hamming.generate_messages(m0, i) # ['http://yghqo.at']
+        messages = hamming.generate_messages(m0, i, True) # ['http://yghqo.at']
         print("# message: ", len(messages))
         #print('MESSAGES: ', messages)
         print("Finished in: ", time.time() - start_m)
@@ -238,4 +215,9 @@ def verify_solution(q0, m0, ordered_qr_codes, image_name):
     return [code for code in res if code]
 
 if __name__ == '__main__':
-    generate_malicious_qr('./tests/target/yahoo.png')
+    #m1 = "cic-health.com/Hynes"
+    m1 = 'http://yahoo.at'
+    ecc = 'LOW'
+    version = 2
+    mask = 7
+    generate_malicious_qr(m1, ecc, version, mask)

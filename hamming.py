@@ -97,9 +97,9 @@ def generate_messages(url, distance, scramble_path = False):
     #print(messages)
     return messages
 
-m = generate_messages("yahoo.com/", 2, True)
-print(m)
-print(len(set(m)))
+# m = generate_messages("yahoo.com/", 2, True)
+# print(m)
+# print(len(set(m)))
 
 # m0='yahoo.com'
 # m1='http://yahoo.com'
