@@ -24,7 +24,7 @@ def generate_malicious_qr(m0, ecc, version, mask):
     q0 = qr.qr_matrix(q0)
 
     # try for each hamming distance
-    for i in range(1, len(m1)):
+    for i in range(1, len(m0)):
         print(">>>>HAMMING DISTANCE: ", i)
         # 2. Generate several messages Mi, i = 1,...,n, that contain URLs to possible
         # phishing sites (the new messages are generated in a way to make them look
@@ -218,6 +218,6 @@ if __name__ == '__main__':
     #m1 = "cic-health.com/Hynes"
     m1 = 'http://yahoo.at'
     ecc = 'LOW'
-    version = 2
+    version = 1
     mask = 7
     generate_malicious_qr(m1, ecc, version, mask)
