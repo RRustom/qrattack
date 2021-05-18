@@ -44,7 +44,7 @@ def generate_malicious_qr(image_path):
     mask = 7
 
     q0 = qr.generate_qr_code(m0, ecc, version, mask)
-
+    q0 = qr.qr_matrix(q0)
 
     # try for each hamming distance
     for i in range(1, len(m0)):
@@ -116,15 +116,13 @@ def generate_malicious_qr(image_path):
 
     return []
 
-def symmetric_diff(qr_0, qr_i):
+def symmetric_diff(q0, q1):
     """Calculates symmetric difference between 2 QR codes
-
     Symmetric difference is the set of modules that are different colors at the
     same position on both QrCodes q_0 and q_i
-
     Args:
-        qr_0: A QrCode object of size nxn
-        qr_i: A QrCode object also of size nxn
+        q0: np.ndarray matrix representation of QR code
+        q1: np.ndarray matrix representation of QR code
     Returns:
         A list diffs of two lists of tuples that represent (x,y) positions on
         the qr odes. The first list diffs[0] contains tuples representing
@@ -133,36 +131,28 @@ def symmetric_diff(qr_0, qr_i):
         the opposite: positions where qr_0 was black and qr_i was white. All
         (x,y) pairs in range (n,n) not included in either list are the same
         color in both qr_0 and qr_i.
+        (xor of q0 and q1)
     """
-    symmetric_diffs = [[],[]]
-    for y in range(qr_0.get_size()):
-        for x in range(qr_0.get_size()):
-            qr_0_color = qr_0.get_module(x, y)
-            qr_i_color = qr_i.get_module(x, y)
-            if qr_0_color != qr_i_color:
-                symmetric_diffs[qr_0_color].append((x,y)) # make sure black/white interpretation is correct here linds!
-    return symmetric_diffs
+    return np.logical_xor(q0, q1)
 
-def calculate_difference_ratio(symmetric_diffs):
+def calculate_ratio(qr0, qr1, dx):
     """Calculates ratio of size of symmetric_diff[0] to total elems in symmetric_diff
-
     From two lists of unique length-2 tuples of integers that do not overlap,
     calculates the ratio of the number of elements in the first list to the
     total number of elements included in both lists.
-
     Args:
-        symmetric_diff: A list containing two lists of unique length-2 tuples
-        of integers that do not overlap
+        q0: np.ndarray matrix representation of QR code
+        q1: np.ndarray matrix representation of QR code
+        dx: matrix symmetric diff between q0 and q1
     Returns:
         the ratio of the first list length to length of the combined lists
         if both lists are empty, returns 1
     """
-    combined_lists = [pair for sublist in symmetric_diffs for pair in sublist]
-    return len(symmetric_diffs[0])/len(combined_lists)
+    rx = np.logical_and(qr0, qr1)
+    return np.linalg.norm(rx, 1) / np.linalg.norm(dx, 1)
 
-def order_codes_by_ratio(qr_codes, symmetric_diff_ratios, ecc):
+def order_codes_by_ratio(qr_code_matrices, symmetric_diff_ratios, ecc):
     """Order qr_codes by symmetric_diff ratio r_i in descending order
-
     Args:
         qr_codes: list of QrCode objects
         symmetric_diff_ratios: list of ratios r_i
@@ -172,7 +162,7 @@ def order_codes_by_ratio(qr_codes, symmetric_diff_ratios, ecc):
     """
 
     # order qr_codes by symmetric_diff_ratios in descending order
-    zipped = zip(symmetric_diff_ratios, qr_codes)
+    zipped = zip(symmetric_diff_ratios, qr_code_matrices)
     ordered = [(ri, qr_code) for ri, qr_code in sorted(zipped, key = lambda x: x[0], reverse=True)]
 
     # omit qr codes where r_i is less than the error correcting capacity of target qr code
@@ -186,13 +176,9 @@ def order_codes_by_ratio(qr_codes, symmetric_diff_ratios, ecc):
 def is_code_valid(args):
     q0, m0, qx, image_name, i = args
     dx = np.logical_xor(q0, qx)
-    #qr.qr_matrix_image(dx, './tests/malicious/dx_' + str(i) + '.png')
     rx = np.logical_and(qx, dx)
-    #qr.qr_matrix_image(rx, './tests/malicious/rx_' + str(i) + '.png')
     qx_prime = np.logical_or(q0, rx)
-    #qr.qr_matrix_image(qx_prime, './tests/malicious/qx_prime_yahoo_' + str(i) + '.png')
 
-    diff = qr.qr_diff(q0, qx_prime)
     #qr.qr_matrix_image(diff, './tests/malicious/diff_' + str(i) + '.png')
 
     # Check after every module, whether the meaning of the QR code can be decoded
@@ -232,10 +218,6 @@ def verify_solution(q0, m0, ordered_qr_codes, image_name):
     # Rx = Qx AND Dx (AND = element-wise AND)
     # Dx = Q0 XOR Qx,
     # Qx = code in qr_codes
-
-    q0 = qr.qr_matrix(q0)
-
-    decoded = qr.decode_qr_matrix(q0)
 
     workers = 5
 
