@@ -30,7 +30,7 @@ def is_valid_domain(domain, top_level):
         return False
     return
 
-def hamming_circle(domain, top_level, n, alphabet):
+def hamming_circle(protocol, domain, top_level, path, n, alphabet, scramble_path):
     """Generate strings over alphabet whose Hamming distance from s is
     exactly n.
 
@@ -42,9 +42,13 @@ def hamming_circle(domain, top_level, n, alphabet):
     ['abb', 'bab', 'bba']
 
     """
-    for positions in combinations(range(len(domain)), n):
+    seed = domain #specify which text to scramble
+    if len(path) > 1 and scramble_path: #Its not empty string or just a slash
+        seed = domain+path[1:] #cut off slash
+
+    for positions in combinations(range(len(seed)), n):
         for replacements in product(range(len(alphabet)-1), repeat=n):
-            cousin = list(domain)
+            cousin = list(seed)
             for p, r in zip(positions, replacements):
                 if cousin[p] == alphabet[r]:
                     cousin[p] = alphabet[-1]
@@ -52,18 +56,54 @@ def hamming_circle(domain, top_level, n, alphabet):
                     cousin[p] = alphabet[r]
             word = ''.join(cousin)
             if is_valid_domain(word, top_level):
-                yield word + '.' + top_level#"http://" + word + '.' + top_level
+                if len(path) > 1 and scramble_path: #we scrambled the path too
+                    sd = word[:len(domain)]
+                    path = '/' + word[len(domain):]
+                    to_yield = protocol + word + '.' + top_level + path
+                else:
+                    sd = word
+                    to_yield = protocol + word + '.' + top_level + path
+                yield to_yield
 
-def generate_messages(url, distance):
-    parsed = urlparse(url)
-    print("PARSED: ", parsed)
-    domain, top_level = parsed.path.rsplit('.', 2)
-    print('DOMAIN: ', domain)
-    print('TOP_LEVEL: ', top_level)
-    messages = list(hamming_circle(domain, top_level, distance, ''.join(replacements)))
+def url_extraction(url):
+
+    protocol = ''
+    url_without_protocol = url
+    if '://' in url:
+        protocol, url_without_protocol = url.split('://')
+        protocol = protocol + '://' #add this to protocol
+
+    path = ''
+    domains = url_without_protocol
+    if '/' in url_without_protocol:
+        domains, path = url_without_protocol.split('/', 1)
+        path = '/' + path #only want slash after tld if it showed up in original
+
+    subdomains = ''
+    tld = domains
+    if '.' in domains:
+        subdomains, tld = domains.rsplit('.', 1)
+    else:
+        raise ValueError('url has no TLD')
+
+    return [protocol, subdomains, tld, path]
+
+
+def generate_messages(url, distance, scramble_path = False):
+    p, sd, tld, path = url_extraction(url)
+    print('DOMAIN: ', sd)
+    print('TOP_LEVEL: ', tld)
+    messages = list(hamming_circle(p, sd, tld, path, distance, ''.join(replacements), scramble_path))
     #print(messages)
     return messages
 
-# m = generate_messages("web.mit", 2)
-# print(len(m))
+# m = generate_messages("yahoo.com/", 2, True)
+# print(m)
 # print(len(set(m)))
+
+# m0='yahoo.com'
+# m1='http://yahoo.com'
+# m2='http://news.yahoo.com'
+# m3='http://news.yahoo.com/hello'
+#
+# url_extraction('a.com')

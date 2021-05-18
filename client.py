@@ -6,16 +6,8 @@ import cv2
 addr = 'http://localhost:5000'
 test_url = addr + '/api/test'
 
-# prepare headers for http request
-content_type = 'image/jpeg'
-headers = {'content-type': content_type}
+payload = {'message': 'cic-health.com', 'ecc': "MEDIUM", 'version': 1, 'mask': 7}
 
-img = cv2.imread('test.png')
-# encode image as png
-_, img_encoded = cv2.imencode('.png', img)
-# send http request with image and receive response
-response = requests.post(test_url, data=img_encoded.tostring(), headers=headers)
-# decode response
-print(json.loads(response.text))
+response = requests.post(test_url, data=json.dumps(payload), headers=headers)
 
-# expected output: {u'message': u'image received. size=124x124'}
+print(response.read().decode())

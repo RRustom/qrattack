@@ -11,6 +11,7 @@ six = "*"
 python-dateutil = "*"
 reedsolo = "*"
 requests = "*"
+flask = "*"
 
 [dev-packages]
 
