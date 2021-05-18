@@ -1,5 +1,15 @@
 from urllib.parse import urlparse
 import random
+from concurrent.futures import ProcessPoolExecutor
+
+REPLACEMENTS = set(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
+                'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+                'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7',
+                '8', '9', '0', '-', '.', ' '])
+
+TL_DOMAINS = set(['com', 'net', 'org', 'dev', 'app', 'inc', 'website', 'io', 'co', 'ai',
+                'me', 'biz', 'blog', 'site', 'onl', 'to', 'bz', 'us', 'page'])
+# https://www.namecheap.com/domains/new-tlds/explore/
 
 # Eric
 def is_valid_url(url):
@@ -66,7 +76,99 @@ def parse_url(url):
         print("Failed to Parse URL:" + url)
         return None
 
-def similar_sl_domains_random(sl_domain, n, n_replace=-1):
+# def similar_sl_domains_random(sl_domain, n, n_replace=-1):
+#     """
+#     Creates n number of similar second level domain names.
+#
+#     Args:
+#         sl_domain: <Str> Second level domain name
+#         n: <int> number of second level domain names to create
+#         n_replace: <int> number of characters to replace. If < 0, then randomize
+#     Returns:
+#         similar: <list> List of similar domain names
+#     """
+#     similar = []
+#     REPLACEMENTS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
+#                     'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+#                     'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7',
+#                     '8', '9', '0', '-', '.', ' ']
+#
+#     # guarantee n results
+#     while len(similar) < n:
+#         final = sl_domain
+#         if n_replace < 0:
+#             n_replace = random.randint(1, len(sl_domain)-1)
+#         for j in range(n_replace):
+#             replace_index = random.randint(0, len(sl_domain)-1)
+#             # choose a random replacement character
+#             index = random.randint(0, len(REPLACEMENTS)-1)
+#             final = final[:replace_index] + REPLACEMENTS[index] + final[replace_index+1:]
+#             if final != sl_domain:  # in the off chance the outcome is the same
+#                 similar.append(final)
+#     return similar
+
+def b4_after_tld(tld, b4_chars, after_chars, max_mods):
+    '''Takes as input a template for what comes before and after the tld'''
+
+    b4_and_after = [] #Intermediate storage
+    urls_out = [] #Function Output
+
+    b4_len = len(b4_chars) #extract lengths
+    after_len = len(after_chars)
+
+    to_manipulate = b4_chars+after_chars #Concatenate the chars before and after the tld
+
+    def recursive_gen(string, num_to_change, index=0): #Define recurisve func
+        out = []
+        if index > (len(string)-1): #return empty string if we hit end of input
+            return ['']
+
+        elif num_to_change == 0: #Return remainder of string if number left to change is zero
+            return [string[index:]]
+
+        elif num_to_change > 0: # either swap whats at this index or dont
+            for r in REPLACEMENTS: #swap
+                if r != string[index]:
+                    for s in recursive_gen(string=string, index=index+1, num_to_change=num_to_change-1):
+                        out.append(r + s)
+
+        for s in recursive_gen(string=string, index=index+1, num_to_change=num_to_change): #dont swap
+            out.append(string[index]+s)
+
+        return out
+
+    # args = [(to_manipulate, i) for i in list(range(1, max_mods))]
+    # workers = 5
+    # with ProcessPoolExecutor(workers) as ex:
+    #     res = ex.map(recursive_gen, args)
+    # res = list(res)
+
+    for i in range(max_mods): #try changing just one mod, then 2, then 3...
+        b4_and_after += recursive_gen(to_manipulate, i)
+
+    b4_and_after = set(b4_and_after) #convert to set to eliminate duplicates
+
+    # can only have dots before the tld and only have spaces after if they work their way back from the end
+    for each in b4_and_after:
+        if each[0] == '.' or each[0]== ' ' or each[0]=='-':
+            continue
+        else:
+            for i in range(1, len(each)+1): # not really sure why this doesnt give index out of range error
+                if each[-1] == '-':
+                    break
+                if '.' in each[i:]:
+                    break
+                if ' ' in each[:i] and each[-1] != ' ':
+                    break # this does not account for spaces that show up when the last char is also a space
+                if ' ' in each[i:]:
+                    break
+                urls_out.append(each[:i]+tld+each[i:]) #add to output if its valid
+    return urls_out
+
+
+
+
+def similar_url_brute_force(url,n, max_mods=1):
     """
     Creates n number of similar second level domain names.
 
@@ -78,173 +180,46 @@ def similar_sl_domains_random(sl_domain, n, n_replace=-1):
         similar: <list> List of similar domain names
     """
     similar = []
-    replacements = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
-                    'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-                    'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7',
-                    '8', '9', '0', '-', '']
+    LEN_URL = len(url)
 
-    # guarantee n results
-    while len(similar) < n:
-        final = sl_domain
-        if n_replace < 0:
-            n_replace = random.randint(1, len(sl_domain)-1)
-        for j in range(n_replace):
-            replace_index = random.randint(0, len(sl_domain)-1)
-            # choose a random replacement character
-            index = random.randint(0, len(replacements)-1)
-            final = final[:replace_index] + replacements[index] + final[replace_index+1:]
-            if final != sl_domain:  # in the off chance the outcome is the same
-                similar.append(final)
+    if 'http' not in url: #Standardize formating for parsing
+        url = "http://" + url
+
+    protocol, domains, path = parse_url(url) #Parse
+
+    url_no_protocol = url.split('://')[1]
+    top_level_domain = domains[-1]
+
+    packaged_tld = '.' + top_level_domain + "/"
+    split_url = url_no_protocol.split(packaged_tld)
+
+    if len(split_url) == 2: #Get characters before and after the TLD
+        b4_tld, after_tld = split_url
+    elif len(split_url) == 1:
+        b4_tld, after_tld = split_url[0], ''
+
+    for curr_tld in TL_DOMAINS: # We might want to maintain string length such that lengthening tld shortens rest
+        packaged_curr_tld = '.' + curr_tld + "/"
+        similar += b4_after_tld(packaged_curr_tld, b4_tld, after_tld, max_mods)
     return similar
 
-
-
-def similar_sl_domains(sl_domain, n):
-    '''
-    Creates n number of similar second level domain names.
-
-    Args:
-        sl_domain: <Str> Second level domain name
-        n: <int> number of second level domain names to create
-    Returns:
-        similar: <list> List of similar domain names
-    '''
-    similar = []
-
-    alphabet_string = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
-                        'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-                        'w', 'x', 'y', 'z']
-    number_list = [1,2,3,4,5,6,7,8,9]
-
-    # 1 Insert random alphabetic char @ end:
-    for i in alphabet_string:
-        similar.append(sl_domain+i)
-
-    # 2 Duplicate Char in middle of string:
-    for i in range(len(sl_domain)-1):
-        toAdd = sl_domain[:i+1] + sl_domain[i] + sl_domain[i+1:]
-        similar.append(toAdd)
-
-    # 3 Duplicate entire string?
-
-    # 4 Add number @ end
-    for i in number_list:
-        similar.append(sl_domain+str(i))
-
-    # 5 Look alike numbers and letters
-    for i in range(len(sl_domain)-1):
-        if sl_domain[i] == '0':
-            #Replace zeros with Os
-            toAdd = sl_domain[:i] + "O" + sl_domain[i+1:]
-            similar.append(toAdd)
-        elif sl_domain[i] == 'o' or sl_domain[i] == 'O': #Capital or lower case
-            #Replace Os and os with zeros
-            toAdd = sl_domain[:i] + "0" + sl_domain[i+1:]
-            similar.append(toAdd)
-
-
-    for i in range(len(sl_domain)-1):
-        if sl_domain[i] == '1':
-            #Replace ones with l
-            toAdd = sl_domain[:i] + "l" + sl_domain[i+1:]
-            similar.append(toAdd)
-        elif sl_domain[i] == 'l' or sl_domain[i] == 'L': #Capital or lower case
-            #Replace l and L with ones
-            toAdd = sl_domain[:i] + "1" + sl_domain[i+1:]
-            similar.append(toAdd)
-
-    # We change at most 1 character in a url...
-
-    return similar[:min(len(similar), n)]
-
-def generate_similar_urls(url, num_similar, with_sub_domains = False, with_filename = False):
-    '''
-    Creates a specified number of urls that are similar to the url provided; assumes
-    url provided has been checked for validity.
-
-    Args:
-        url: <Str> a full url, starting with 'http' or 'https'
-        num_similar: <int> number of similar urls to create
-        with_sub_domains: <bool> Indicates if output urls should have subdomains
-        with_filename: <bool> indicates if output urls should have filenames
-    Returns:
-        output_urls: <list> containing <str> list of similar domain names
-    '''
-    # constraints:
-    #   - same length
-    #   - same top level domain: https://www.icann.org/resources/pages/tlds-2012-02-25-en
-    #   - play around with subdomains? maybe NO subdomains?
-    #   - restricted characters
-    #   - maybe check if URL is available?
-
-    #Split url input into key components
-    protocol, domains, filename = parse_url(url)
-
-    if len(domains) == 3:
-        sub_domains, sl_domain, tl_domain = domains
-    elif len(domains) == 2:
-        sl_domain, tl_domain = domains
-        sub_domains = ""
-
-
-    #Init empty list to store output
-    output_urls = []
-
-    #Generate similar sl_domains
-    similar = similar_sl_domains_random(sl_domain, num_similar)
-
-    # iterate through similar urls
-    for i in similar:
-        new_sl_domain = i
-
-        if with_sub_domains and with_filename: #inefficient to check every time
-            url = build_url(
-                            protocol = protocol,
-                            sl_domain = new_sl_domain,
-                            tl_domain = tl_domain,
-                            sub_domains=sub_domains,
-                            filename=filename
-                            )
-        elif with_sub_domains:
-            url = build_url(
-                            protocol = protocol,
-                            sl_domain = new_sl_domain,
-                            tl_domain = tl_domain,
-                            sub_domains=sub_domains,
-                            )
-        elif with_filename:
-            url = build_url(
-                            protocol = protocol,
-                            sl_domain = new_sl_domain,
-                            tl_domain = tl_domain,
-                            filename=filename
-                            )
-        else: #Default
-            url = build_url(
-                            protocol = protocol,
-                            sl_domain = new_sl_domain,
-                            tl_domain = tl_domain,
-                            )
-
-        output_urls.append(url)
-
-    return output_urls
-
-def generate_similar_strings(url):
-    # TODO (1.1)
-    return
-
-def generate_similar_payloads(url):
-    # TODO (2.0)
-    return
 
 # url = "https://www.geeksforgeeks.org/python-generate-random-string-of-given-length/"
 # print(is_valid_url(url))
 
-#
+
 # m = 'youtube'
 # mes = similar_sl_domains_random(m, 10, 2)
 # m = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
 # mes = generate_similar_urls(m, 100)
 # print(len(mes))
 # print(mes)
+m = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+m='yahoo.com'
+m='http://yahoo.com'
+m='http://news.yahoo.com'
+m='http://news.yahoo.gg/hello'
+n=2
+#print(similar_url_brute_force(m,n, max_mods=2))
+# o = b4_after_tld(".com/", "yahoo", "news", 2)
+# print(o)
