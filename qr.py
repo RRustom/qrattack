@@ -173,22 +173,48 @@ def qr_diff(qr0_matrix, qr1_matrix):
     size = qr0_matrix.size
     qr0_matrix = (1 - qr0_matrix)*255
     qr1_matrix = (1 - qr1_matrix)*255
-    black_diff = qr1_matrix - qr0_matrix
+    black_diff = 255 - qr0_matrix + qr1_matrix
+    #return black_diff
     m = black_diff.astype('uint8')
     return cv2.resize(m, dsize=(1000, 1000), interpolation=cv2.INTER_NEAREST)
 # # TEST
 #
-# # m = 'Hello, world!'
-# # ecc = "QUARTILE"
-# # mask = 0
-# # version = 4
-# # q = generate_qr_code(m, ecc, version, mask)
-# # m = qr_matrix(q)
-# # print(m)
-# # rgb = qr_matrix_rgb_from_matrix(m)
-# # print(rgb)
-# # img = Image.fromarray(rgb)
+# m = 'http://mit.edu'
+# ecc = "MEDIUM"
+# mask = 7
+# version = 1
+# q = generate_qr_code(m, ecc, version, mask)
+# q0 = qr_matrix(q)
+# rgb_matrix = qr_matrix_rgb_from_matrix(q0)
+# img1 = Image.fromarray(rgb_matrix)
+# img1.save('tests/target/mit.png')
+# #img1.show()
+#
+# # m1 = ''
+# # qi = generate_qr_code(m1, ecc, version, mask)
+# # q1 = qr_matrix(qi)
+# # rgb_matrix1 = qr_matrix_rgb_from_matrix(q1)
+# # img2 = Image.fromarray(rgb_matrix1)
+# # img2.save('yahoo1.png')
+# # #img2.show()
+# #
+# # diff = qr_diff(q0, q1)
+# # img = Image.fromarray(diff)
+# # img.save('yahoo_diff.png')
 # # img.show()
+# # #
+# p = 'tests/target/mit.png'
+# print(get_qr_info(p))
+
+
+
+# #print(m)
+# rgb = qr_matrix_rgb_from_matrix(m)
+# #print(rgb)
+# img = Image.fromarray(rgb)
+# img.show()
+
+
 #
 #
 # # # svg = qr0.to_svg_str(4)
