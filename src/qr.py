@@ -148,7 +148,7 @@ def decode_qr_matrix(qr_matrix):
     return False
 
 def qr_matrix_image(qr_matrix, image_path, show=False):
-    """Save a PNG of qr_matrix at image_path
+    """Save a PNG of qr_matrix at image_path, returns that image
 
     Args:
         qr_matrix: np.ndarray matrix representation of QR code
@@ -160,6 +160,7 @@ def qr_matrix_image(qr_matrix, image_path, show=False):
     img.save(image_path)
     if show:
         img.show()
+    return img
 
 def qr_diff(qr0_matrix, qr1_matrix):
     """Calculate the difference between two QR code matrixes

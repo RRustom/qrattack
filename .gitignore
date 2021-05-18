@@ -3,3 +3,9 @@ Pipfile.lock
 zxingcpp
 node_modules
 *lock.json
+.env
+.env.example
+.env.local
+.env.staging
+Pipfile
+__pycache__

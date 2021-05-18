@@ -1,6 +1,5 @@
 from qrcodegen import *
 import numpy as np
-from pyzbar.pyzbar import decode
 from PIL import Image
 import os
 import multiprocessing as mp
@@ -223,9 +222,9 @@ def verify_solution(q0, m0, ordered_qr_codes, image_name):
 
     args = [(q0, m0, ordered_qr_codes[i], image_name, i) for i in range(len(ordered_qr_codes))]
 
-    with ProcessPoolExecutor(workers) as ex:
-        res = ex.map(is_code_valid, args)
-    res = list(res)
+    # with ProcessPoolExecutor(workers) as ex:
+        # res = ex.map(is_code_valid, args)
+    res = [is_code_valid(arg) for arg in args]
 
     #valid_codes = [is_code_valid(q0, m0, qi) for qi in ordered_qr_codes]
     # with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
