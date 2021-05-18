@@ -30,7 +30,7 @@ def is_valid_domain(domain, top_level):
         return False
     return
 
-def hamming_circle(domain, top_level, n, alphabet):
+def hamming_circle(protocol, domain, top_level, path, n, alphabet, scramble_path = False):
     """Generate strings over alphabet whose Hamming distance from s is
     exactly n.
 
@@ -52,18 +52,45 @@ def hamming_circle(domain, top_level, n, alphabet):
                     cousin[p] = alphabet[r]
             word = ''.join(cousin)
             if is_valid_domain(word, top_level):
-                yield word + '.' + top_level#"http://" + word + '.' + top_level
+                yield protocol + '://'+ word + '.' + top_level + '/' + path
+
+def url_extraction(url):
+
+    protocol = ''
+    url_without_protocol = url
+    if '://' in url:
+        protocol, url_without_protocol = url.split('://')
+
+    path = ''
+    domains = url_without_protocol
+    if '/' in url_without_protocol:
+        domains, path = url_without_protocol.split('/', 1)
+
+    subdomains = ''
+    tld = domains
+    if '.' in domains:
+        subdomains, tld = domains.rsplit('.', 1)
+    else:
+        raise ValueError('url has no TLD')
+
+    return [protocol, subdomains, tld, path]
+
 
 def generate_messages(url, distance):
-    parsed = urlparse(url)
-    print("PARSED: ", parsed)
-    domain, top_level = parsed.path.rsplit('.', 2)
-    print('DOMAIN: ', domain)
-    print('TOP_LEVEL: ', top_level)
-    messages = list(hamming_circle(domain, top_level, distance, ''.join(replacements)))
+    p, sd, tld, path = url_extraction(url)
+    print('DOMAIN: ', sd)
+    print('TOP_LEVEL: ', tld)
+    messages = list(hamming_circle(p, sd, tld, path, distance, ''.join(replacements)))
     #print(messages)
     return messages
 
-# m = generate_messages("web.mit", 2)
-# print(len(m))
-# print(len(set(m)))
+m = generate_messages("http://news.yahoo.com/hello", 1)
+print(m)
+print(len(set(m)))
+
+# m0='yahoo.com'
+# m1='http://yahoo.com'
+# m2='http://news.yahoo.com'
+# m3='http://news.yahoo.com/hello'
+#
+# url_extraction('a.com')
