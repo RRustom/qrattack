@@ -81,7 +81,7 @@ def generate_malicious_qr(image_path):
     # and results in a different message than the original. Repeat this until a valid
     # coloring is found (for the first b elements the check can be omitted,
     # where b denotes the number of errors the BCH-encoding is capable of correcting plus one.
-    # If the resulting code Q′i can get decoded to message Mi, a solution was found.
+    # If the resulting code Q_i can get decoded to message Mi, a solution was found.
     image_name = os.path.basename(image_path)
     start_verify = time.time()
     print("Verifying solutions...")
@@ -204,13 +204,13 @@ def verify_solution(q0, m0, ordered_qr_codes, image_name):
     # and results in a different message than the original. Repeat this until a valid
     # coloring is found (for the first b elements the check can be omitted,
     # where b denotes the number of errors the BCH-encoding is capable of correcting plus one.
-    # If the resulting code Q′i can get decoded to message Mi, a solution was found.
+    # If the resulting code Q_i can get decoded to message Mi, a solution was found.
     # In step seven, the following optimization can be used:
     # Instead of coloring module by module, we simply change all modules that can be
-    # changed by only using black color at once and thus generate Q′x by applying
-    # the fast and simple element-wise OR-function: Q'x = Q0 OR Rx, (OR = element-wise OR)
+    # changed by only using black color at once and thus generate Q_x by applying
+    # the fast and simple element-wise OR-function: Q_x = Q0 OR Rx, (OR = element-wise OR)
     # Q0 = target code,
-    # Q'x = generated code,
+    # Q_x = generated code,
     # Rx = Qx AND Dx (AND = element-wise AND)
     # Dx = Q0 XOR Qx,
     # Qx = code in qr_codes
