@@ -296,8 +296,6 @@ function decodeMatrix(matrix: BitMatrix) {
     return null;
   }
 
-  console.log("FORMAT: ", formatInfo)
-
   const codewords = readCodewords(matrix, version, formatInfo);
   const dataBlocks = getDataBlocks(codewords, version, formatInfo.errorCorrectionLevel);
   if (!dataBlocks) {

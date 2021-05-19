@@ -37,7 +37,6 @@ function scan(matrix: BitMatrix): QRCode | null {
     const extracted = extract(matrix, location);
     const decoded = decode(extracted.matrix);
     if (decoded) {
-      console.log("INDEX GOT DECODED: ", decoded)
       return {
         binaryData: decoded.bytes,
         data: decoded.text,

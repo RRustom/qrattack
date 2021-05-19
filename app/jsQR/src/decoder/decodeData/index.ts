@@ -186,8 +186,6 @@ export function decode(data: Uint8ClampedArray, version: number, ecc: number, ma
     mask: mask
   };
 
-  console.log('DECODER GOT DATA: ', result)
-
   while (stream.available() >= 4) {
     const mode = stream.readBits(4);
     if (mode === ModeByte.Terminator) {
