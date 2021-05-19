@@ -12,6 +12,7 @@ python-dateutil = "*"
 reedsolo = "*"
 requests = "*"
 flask = "*"
+jsonpickle = "*"
 
 [dev-packages]
 

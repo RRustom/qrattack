@@ -12,7 +12,7 @@ import qr
 import url
 import hamming
 
-def generate_malicious_qr(image_path):
+def generate_malicious_qr(message, ecc, version, mask, image_name):
     # 1. Scan the QR code (Q0) with a mobile device capable of decoding QR codes
     # and re- trieve the corresponding Message M0.
     # For the rest of the paper we assume that M0 is a URL to a website.
@@ -35,18 +35,11 @@ def generate_malicious_qr(image_path):
     # print(ecc, version, mask)
     # print("Time to find QR info: ", time.time() - start_qr_info)
 
-    image_path = './tests/target/mit_short.png'
-    m0 = 'mit.edu'#"http://cic-health.com"
-    m1 = "cic-health.com"
-    ecc = 'MEDIUM'
-    version = 1
-    mask = 7
-
-    q0 = qr.generate_qr_code(m0, ecc, version, mask)
+    q0 = qr.generate_qr_code(message, ecc, version, mask)
     q0 = qr.qr_matrix(q0)
 
     # try for each hamming distance
-    for i in range(1, len(m0)):
+    for i in range(1, len(message)):
         print(">>>>HAMMING DISTANCE: ", i)
         # 2. Generate several messages Mi, i = 1,...,n, that contain URLs to possible
         # phishing sites (the new messages are generated in a way to make them look
@@ -54,7 +47,7 @@ def generate_malicious_qr(image_path):
         # in the original URL).
         start_m = time.time()
         print("Generating messages...")
-        messages = hamming.generate_messages(m0, i) # ['http://yghqo.at']
+        messages = hamming.generate_messages(message, i) # ['http://yghqo.at']
         print("# message: ", len(messages))
         #print('MESSAGES: ', messages)
         print("Finished in: ", time.time() - start_m)
@@ -99,10 +92,9 @@ def generate_malicious_qr(image_path):
         # coloring is found (for the first b elements the check can be omitted,
         # where b denotes the number of errors the BCH-encoding is capable of correcting plus one.
         # If the resulting code Q′i can get decoded to message Mi, a solution was found.
-        image_name = os.path.basename(image_path)
         start_verify = time.time()
         print("Verifying solutions...")
-        valid_codes = verify_solution(q0, m0, ordered_codes, image_name)
+        valid_codes = verify_solution(q0, message, ordered_codes, image_name)
         print("Finished in: ", time.time() - start_verify)
         print("valid codes: ", valid_codes)
 
@@ -113,7 +105,7 @@ def generate_malicious_qr(image_path):
         # modules in the symmetric difference Di is greater than the number of errors
         # that can be corrected by the BCH-encoding (b).
 
-    return []
+    return ""
 
 def symmetric_diff(q0, q1):
     """Calculates symmetric difference between 2 QR codes
@@ -186,11 +178,12 @@ def is_code_valid(args):
     if not decoded:
         return
     if decoded != m0:
-        qr.qr_matrix_image(qx_prime, 'tests/malicious/' + str(i) + image_name)
+        output_path = 'demo/' + image_name + '.png'
+        qr.qr_matrix_image(qx_prime, output_path)
         diff = qr.qr_diff(q0, qx_prime)
         img = Image.fromarray(diff)
-        img.save('tests/malicious/' + 'diff_' + str(i) + '_'+ image_name)
-        return decoded
+        img.save('demo/' + 'diff_' + image_name + '.png')
+        return output_path#decoded
 
 def verify_solution(q0, m0, ordered_qr_codes, image_name):
     """
@@ -224,7 +217,11 @@ def verify_solution(q0, m0, ordered_qr_codes, image_name):
 
     # with ProcessPoolExecutor(workers) as ex:
         # res = ex.map(is_code_valid, args)
-    res = [is_code_valid(arg) for arg in args]
+    for arg in args:
+        output_path = is_code_valid(arg)
+        if output_path:
+            return output_path
+    return
 
     #valid_codes = [is_code_valid(q0, m0, qi) for qi in ordered_qr_codes]
     # with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
@@ -234,7 +231,7 @@ def verify_solution(q0, m0, ordered_qr_codes, image_name):
     #     for future in concurrent.futures.as_completed(futures):
     #         valid_codes.append(future.result())
     #
-    return [code for code in res if code]
+    #return [code for code in res if code]
 
 if __name__ == '__main__':
     generate_malicious_qr('./tests/target/yahoo.png')
