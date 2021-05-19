@@ -2,7 +2,6 @@ from qrcodegen.qrcodegen import *
 import numpy as np
 from PIL import Image
 import cv2
-import cv
 import tempfile
 import zxingcpp
 import time

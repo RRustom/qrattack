@@ -195,9 +195,9 @@ def is_code_valid(args):
         file = open('demo/' + image_name + '.txt',"w")#write mode
         file.write(decoded)
         file.close()
-        
+
         img.save('demo/' + 'diff_' + image_name + '.png')
-        return image_name#decoded
+        return 'diff_' + image_name#decoded
 
 def verify_solution(q0, m0, ordered_qr_codes, image_name):
     """
@@ -246,17 +246,17 @@ def verify_solution(q0, m0, ordered_qr_codes, image_name):
     #         valid_codes.append(future.result())
     #
     #return [code for code in res if code]
-
-if __name__ == '__main__':
-    # generate_malicious_qr(
-    # message='https://www.cic-health.com/hynes',
-    # ecc= 'MEDIUM',
-    # version=3,
-    # mask=6,
-    # image_name='./tests/target/cic-health')
-    generate_malicious_qr(
-    message='http://yahoo.at',
-    ecc= 'LOW',
-    version=1,
-    mask=7,
-    image_name='test_red')
+#
+# if __name__ == '__main__':
+#     # generate_malicious_qr(
+#     # message='https://www.cic-health.com/hynes',
+#     # ecc= 'MEDIUM',
+#     # version=3,
+#     # mask=6,
+#     # image_name='./tests/target/cic-health')
+#     generate_malicious_qr(
+#     message='http://yahoo.at',
+#     ecc= 'LOW',
+#     version=1,
+#     mask=7,
+#     image_name='test_red')

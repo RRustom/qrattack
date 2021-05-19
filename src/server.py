@@ -32,11 +32,11 @@ def tamper():
     print("FILENAME: ", filename)
 
     output_path = generate_malicious_qr(message, ecc, version, mask, filename)
-    file = open('demo/' + output_path + '.txt',"r")
+    file = open('demo/' + output_path.replace('diff_', '') + '.txt',"r")
     malicious_message = file.readlines()
     file.close()
     print("MESSAGE: ", malicious_message)
-    return  malicious_message[0] + '   ' + output_path#send_file(output_path, mimetype='image/png')
+    return  malicious_message[0] + '   ' + output_path
 
 
 @app.route('/api/destroy', methods=['GET'])
