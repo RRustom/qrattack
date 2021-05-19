@@ -4,26 +4,24 @@ import numpy as np
 import cv2
 from generate_malicious_qr import generate_malicious_qr
 from generate_broken_qr import generate_broken_qr
+from flask_cors import CORS
 
 # generate_malicious_qr('./tests/target/yahoo.png')
 
 ECC_LEVEL = {0: 'LOW', 1: 'MEDIUM', 2: 'QUARTILE', 3: 'HIGH'}
 
 app = Flask(__name__)
+CORS(app)
 
-@app.route('/api/generate', methods=['GET'])
-def generate():
-    data = request.args
-
+@app.route('/api/tamper', methods=['GET'])
+def tamper():
     # 1. get arguments
     message = request.args.get('message')
     ecc = request.args.get('ecc')
-    ecc = ECC_LEVEL[int(ecc)]
-    version = int(request.args.get('version'))
-    mask = int(request.args.get('mask'))
+    ecc = ECC_LEVEL[abs(int(ecc))]
+    version = abs(int(request.args.get('version')))
+    mask = abs(int(request.args.get('mask')))
 
-    # attack = 1 for change, 2 for destroy
-    attack = int(request.args.get('attack'))
     print("MESSAGE: ", message)
     print("VERSION: ", version)
     print("ECC: ", ecc)
@@ -33,13 +31,57 @@ def generate():
     filename = str(datetime.datetime.now())
     print("FILENAME: ", filename)
 
-    # change attack
-    if attack == 1:
-        output_path = generate_malicious_qr(message, ecc, version, mask, filename)
-        return send_file(output_path, mimetype='image/png')
+    output_path = generate_malicious_qr(message, ecc, version, mask, filename)
+    file = open('demo/' + output_path + '.txt',"r")
+    malicious_message = file.readlines()
+    file.close()
+    print("MESSAGE: ", malicious_message)
+    return  malicious_message[0] + '   ' + output_path#send_file(output_path, mimetype='image/png')
+
+
+@app.route('/api/destroy', methods=['GET'])
+def destroy():
+    # 1. get arguments
+    message = request.args.get('message')
+    ecc = request.args.get('ecc')
+    ecc = ECC_LEVEL[abs(int(ecc))]
+    version = abs(int(request.args.get('version')))
+    mask = abs(int(request.args.get('mask')))
+
+    # attack = 1 for change, 2 for destroy
+    print("MESSAGE: ", message)
+    print("VERSION: ", version)
+    print("ECC: ", ecc)
+    print("MASK: ", mask)
+
+    # 2. create filename
+    filename = str(datetime.datetime.now())
+    print("FILENAME: ", filename)
 
     output_path = generate_broken_qr(message, ecc, version, mask, filename)
     return send_file(output_path, mimetype='image/png')
+
+
+@app.route('/api/get_image', methods=['GET'])
+def get_image():
+
+    # 1. get arguments
+    name = request.args.get('name')
+
+    # attack = 1 for change, 2 for destroy
+    return send_file('demo/' + name + '.png', mimetype='image/png')
+    #
+    # # 2. create filename
+    # filename = str(datetime.datetime.now())
+    # print("FILENAME: ", filename)
+    #
+    # # change attack
+    # if attack == 1:
+    #     output_path = generate_malicious_qr(message, ecc, version, mask, filename)
+    #
+    #
+    # output_path = generate_broken_qr(message, ecc, version, mask, filename)
+    # return send_file(output_path, mimetype='image/png')
 
 
 
@@ -55,4 +97,4 @@ def test():
 
 
 # start flask app
-app.run(host="0.0.0.0", port=5000)
+app.run(host="127.0.0.1", port=8080)

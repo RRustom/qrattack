@@ -178,12 +178,18 @@ def is_code_valid(args):
     if not decoded:
         return
     if decoded != m0:
-        output_path = 'demo/' + image_name + '.png'
-        qr.qr_matrix_image(qx_prime, output_path)
+        output_path = 'demo/' + image_name # + '.png'
+
+        # save txt file of malicious url
+        file = open('demo/' + image_name + '.txt',"w")#write mode
+        file.write(decoded)
+        file.close()
+
+        qr.qr_matrix_image(qx_prime, output_path + '.png')
         diff = qr.qr_diff(q0, qx_prime)
         img = Image.fromarray(diff)
         img.save('demo/' + 'diff_' + image_name + '.png')
-        return output_path#decoded
+        return image_name#decoded
 
 def verify_solution(q0, m0, ordered_qr_codes, image_name):
     """
