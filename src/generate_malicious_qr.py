@@ -3,6 +3,7 @@ import numpy as np
 from PIL import Image
 import os
 import multiprocessing as mp
+import cv2
 # import threading
 # import concurrent.futures
 import time
@@ -180,8 +181,26 @@ def is_code_valid(args):
     if decoded != m0:
         output_path = 'demo/' + image_name + '.png'
         qr.qr_matrix_image(qx_prime, output_path)
-        diff = qr.qr_diff(q0, qx_prime)
-        img = Image.fromarray(diff)
+        diff = qr.qr_diff(q0, qx_prime) #diff is numpy array in RGB, q0 is numpy array
+
+        q0 = qr.qr_matrix_rgb_from_matrix(q0)
+        q0_new=cv2.cvtColor(q0, cv2.COLOR_GRAY2RGB) #convert greyscale original to RGB
+        # print('q0new:', q0_new)
+        # diff_color = cv2.cvtColor(diff, cv2.COLOR_GRAY2RGB)
+        # Image.fromarray(diff_color, 'RGB').show()
+        # q0_new[np.all(diff == (0, 0, 0), axis=-1)] = (255, 0, 0) #is q0 1000 by 1000?
+        # img = Image.fromarray(q0_new, 'RGB')
+
+        diff_color = cv2.cvtColor(diff, cv2.COLOR_GRAY2RGB)
+        q0_new[np.all(diff_color == (0, 0, 0), axis=-1)] = (255, 0, 0)
+        # img_dc = Image.fromarray(diff_color, 'RGB')
+
+        # img_original = Image.fromarray(q0_new)
+        # print(q0_new, diff_color)
+        #
+        # overlay_array = cv2.addWeighted(np.float32(img_original),0.4,np.float32(img_dc),0.1,0)
+        #
+        img= Image.fromarray(q0_new, 'RGB')
         img.save('demo/' + 'diff_' + image_name + '.png')
         return output_path#decoded
 
@@ -234,4 +253,15 @@ def verify_solution(q0, m0, ordered_qr_codes, image_name):
     #return [code for code in res if code]
 
 if __name__ == '__main__':
-    generate_malicious_qr('./tests/target/yahoo.png')
+    # generate_malicious_qr(
+    # message='https://www.cic-health.com/hynes',
+    # ecc= 'MEDIUM',
+    # version=3,
+    # mask=6,
+    # image_name='./tests/target/cic-health')
+    generate_malicious_qr(
+    message='http://yahoo.at',
+    ecc= 'LOW',
+    version=1,
+    mask=7,
+    image_name='test_red')
