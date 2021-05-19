@@ -13,6 +13,7 @@ reedsolo = "*"
 requests = "*"
 flask = "*"
 jsonpickle = "*"
+flask-cors = "*"
 
 [dev-packages]
 
