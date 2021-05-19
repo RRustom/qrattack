@@ -116,7 +116,7 @@
     }
 
     document.getElementById("tamper").addEventListener("click", async (e) => {
-      var generateURL = new URL('http://127.0.0.1:8080/api/tamper')
+      var generateURL = new URL('http://10.0.0.242/api/tamper')
       var params = {
         ecc: outputEcc.innerText,
         message: outputData.innerText,
@@ -138,7 +138,7 @@
 
         console.log('RESULT: ', fetchResult)
 
-        var getImageURL = new URL('http://127.0.0.1:8080/api/get_image')
+        var getImageURL = new URL('http://10.0.0.242/api/get_image')
         var params = {name: imagePath}
         getImageURL.search = new URLSearchParams(params).toString();
 
@@ -155,7 +155,7 @@
       })
 
     document.getElementById("destroy").addEventListener("click", async (e) => {
-      var generateURL = new URL('http://127.0.0.1:8080/api/destroy')
+      var generateURL = new URL('http://10.0.0.242/api/destroy')
       var params = {
         ecc: outputEcc.innerText,
         message: outputData.innerText,
