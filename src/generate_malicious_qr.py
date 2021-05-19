@@ -190,8 +190,14 @@ def is_code_valid(args):
         rgb_q0[np.all(diff_color == (0, 0, 0), axis=-1)] = (255, 0, 0)
 
         img= Image.fromarray(rgb_q0, 'RGB')
+
+        # save txt file of malicious url
+        file = open('demo/' + image_name + '.txt',"w")#write mode
+        file.write(decoded)
+        file.close()
+        
         img.save('demo/' + 'diff_' + image_name + '.png')
-        return output_path#decoded
+        return image_name#decoded
 
 def verify_solution(q0, m0, ordered_qr_codes, image_name):
     """
