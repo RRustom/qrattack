@@ -3,6 +3,7 @@ import numpy as np
 from PIL import Image
 import os
 import multiprocessing as mp
+import cv2
 # import threading
 # import concurrent.futures
 import time
@@ -170,24 +171,31 @@ def is_code_valid(args):
     rx = np.logical_and(qx, dx)
     qx_prime = np.logical_or(q0, rx)
 
-    #qr.qr_matrix_image(diff, './tests/malicious/diff_' + str(i) + '.png')
-
     # Check after every module, whether the meaning of the QR code can be decoded
     # and results in a different message than the original.
     decoded = qr.decode_qr_matrix(qx_prime)
     if not decoded:
         return
     if decoded != m0:
-        output_path = 'demo/' + image_name # + '.png'
+        output_path = 'demo/' + image_name + '.png'
+        qr.qr_matrix_image(qx_prime, output_path)
+        diff = qr.qr_diff(q0, qx_prime) # a greyscale numpy array with values that are either 0 (black) or 255
+
+        # q0 is numpy array that has values of either 0 or 1
+
+        greyscale_q0 = qr.qr_matrix_rgb_from_matrix(q0) #This converts q0 to greyscale 0,1 -> 0,255
+        rgb_q0=cv2.cvtColor(greyscale_q0, cv2.COLOR_GRAY2RGB) #convert greyscale original to RGB
+
+        diff_color = cv2.cvtColor(diff, cv2.COLOR_GRAY2RGB)
+        rgb_q0[np.all(diff_color == (0, 0, 0), axis=-1)] = (255, 0, 0)
+
+        img= Image.fromarray(rgb_q0, 'RGB')
 
         # save txt file of malicious url
         file = open('demo/' + image_name + '.txt',"w")#write mode
         file.write(decoded)
         file.close()
-
-        qr.qr_matrix_image(qx_prime, output_path + '.png')
-        diff = qr.qr_diff(q0, qx_prime)
-        img = Image.fromarray(diff)
+        
         img.save('demo/' + 'diff_' + image_name + '.png')
         return image_name#decoded
 
@@ -240,4 +248,15 @@ def verify_solution(q0, m0, ordered_qr_codes, image_name):
     #return [code for code in res if code]
 
 if __name__ == '__main__':
-    generate_malicious_qr('./tests/target/yahoo.png')
+    # generate_malicious_qr(
+    # message='https://www.cic-health.com/hynes',
+    # ecc= 'MEDIUM',
+    # version=3,
+    # mask=6,
+    # image_name='./tests/target/cic-health')
+    generate_malicious_qr(
+    message='http://yahoo.at',
+    ecc= 'LOW',
+    version=1,
+    mask=7,
+    image_name='test_red')
