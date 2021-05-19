@@ -75,6 +75,7 @@
     <button id="tamper">Tamper</button>
     <button id="destroy">Destroy</button>
   </div>
+  <div id="isLoading" hidden><b>Loading...</b> </div>
   <img id ="image"/>
   <script>
     // const { URL, URLSearchParams } = require('url');
@@ -90,6 +91,7 @@
     var outputMask = document.getElementById("outputMask");
     var maliciousURL = document.getElementById("maliciousURL");
     var image = document.getElementById("image");
+    var isLoading = document.getElementById("isLoading")
 
     function drawLine(begin, end, color) {
       canvas.beginPath();
@@ -123,6 +125,8 @@
       }
       generateURL.search = new URLSearchParams(params).toString();
 
+      isLoading.hidden = false
+
       try {
         //let myRequest = new Request(generateApi);
         const fetchResult = await fetch(generateURL); //generateURL
@@ -142,6 +146,7 @@
 
         // upate output
         maliciousURL.parentElement.hidden = false;
+        isLoading.hidden = true;
         maliciousURL.innerText = message
         image.src = await convertBlobToBase64(await imageResult.blob());
       } catch (error) {
@@ -158,12 +163,14 @@
         mask: outputMask.innerText
       }
       generateURL.search = new URLSearchParams(params).toString();
+      isLoading.hidden = false
 
       try {
         //let myRequest = new Request(generateApi);
         const fetchResult = await fetch(generateURL); //generateURL
 
         image.src = await convertBlobToBase64(await fetchResult.blob());
+        isLoading.hidden = true
       } catch (error) {
         console.error(error);
       }

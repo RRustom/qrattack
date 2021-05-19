@@ -63,6 +63,7 @@
   <h1>QR Attack ☠️</h1>
   <!-- <a id="githubLink" href="https://github.com/cozmo/jsQR">View documentation on Github</a> -->
   <p>Generate malicious QR codes.</p>
+  <p>Generate malicious QR codes.</p>
   <div id="loadingMessage">🎥 Unable to access video stream (please make sure you have a webcam enabled)</div>
   <canvas id="canvas" hidden></canvas>
   <div id="output" hidden>
@@ -90,6 +91,7 @@
     var outputMask = document.getElementById("outputMask");
     var maliciousURL = document.getElementById("maliciousURL");
     var image = document.getElementById("image");
+    var loading = document.getElementById("loading")
 
     function drawLine(begin, end, color) {
       canvas.beginPath();
@@ -123,6 +125,8 @@
       }
       generateURL.search = new URLSearchParams(params).toString();
 
+      loading.parentElement.hidden = false
+
       try {
         //let myRequest = new Request(generateApi);
         const fetchResult = await fetch(generateURL); //generateURL
@@ -142,6 +146,7 @@
 
         // upate output
         maliciousURL.parentElement.hidden = false;
+        loading.hidden = true;
         maliciousURL.innerText = message
         image.src = await convertBlobToBase64(await imageResult.blob());
       } catch (error) {
@@ -158,12 +163,14 @@
         mask: outputMask.innerText
       }
       generateURL.search = new URLSearchParams(params).toString();
+      loading.hidden = false
 
       try {
         //let myRequest = new Request(generateApi);
         const fetchResult = await fetch(generateURL); //generateURL
 
         image.src = await convertBlobToBase64(await fetchResult.blob());
+        loading.hidden = true
       } catch (error) {
         console.error(error);
       }
