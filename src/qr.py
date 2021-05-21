@@ -182,6 +182,20 @@ def qr_diff(qr0_matrix, qr1_matrix):
     return cv2.resize(m, dsize=(1000, 1000), interpolation=cv2.INTER_NEAREST)
 # # TEST
 #
+
+#bitly trials:
+# qrcodesecurity.org/4a - > https://bit.ly/3oztANL
+# qrcodesaredangerous.com - > https://bit.ly/2QCywF7
+# dontscanme.org - > https://bit.ly/3v618FC
+bitly_trial1 = 'https://bit.ly/3oztANL'
+bitly_trial2 = 'https://bit.ly/2QCywF7'
+bitly_trial3 = 'https://bit.ly/2QCywF7'
+
+#long trials:
+long_trial1 = 'https://www.google.com/search?q=what+is+a+qr+code&rlz=1C5CHFA_enUS753US753&oq=what+is+a+qr+code&aqs=chrome..69i57j0i20i263j0l8.6993j0j7&sourceid=chrome&ie=UTF-8'
+long_trial2 = 'https://security.com/super/super/secure?version=forty&mask=seven&ecc=high'
+
+
 # m = 'http://mit.edu'
 # ecc = "MEDIUM"
 # mask = 7

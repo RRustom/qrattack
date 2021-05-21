@@ -48,7 +48,7 @@ def generate_malicious_qr(message, ecc, version, mask, image_name):
         # in the original URL).
         start_m = time.time()
         print("Generating messages...")
-        messages = hamming.generate_messages(message, i) # ['http://yghqo.at']
+        messages = hamming.generate_messages(message, i, True) # ['http://yghqo.at']
         print("# message: ", len(messages))
         #print('MESSAGES: ', messages)
         print("Finished in: ", time.time() - start_m)
@@ -195,7 +195,7 @@ def is_code_valid(args):
         file = open('demo/' + image_name + '.txt',"w")#write mode
         file.write(decoded)
         file.close()
-        
+
         img.save('demo/' + 'diff_' + image_name + '.png')
         return image_name#decoded
 
@@ -254,9 +254,28 @@ if __name__ == '__main__':
     # version=3,
     # mask=6,
     # image_name='./tests/target/cic-health')
+
+    #bitly trials:
+    # qrcodesecurity.org/4a - > https://bit.ly/3oztANL
+    # qrcodesaredangerous.com - > https://bit.ly/2QCywF7
+    # dontscanme.org - > https://bit.ly/3v618FC
+    # lindseyramieric.com - > https://bit.ly/3oBIp2h
+    bitly_trial1 = 'https://bit.ly/3oztANL' #ecc medium, version 3, mask 6, image name bt1
+    #with https: nothing within hamming 2
+    #without: nothing in hmming 2
+    bitly_trial2 = 'https://bit.ly/2QCywF7'
+    #with https: none in hamming 2
+    #without: none
+    bitly_trial3 = 'https://bit.ly/2QCywF7'
+    #with https:
+    #without:
+
+    #long trials:
+    long_trial1 = 'https://www.google.com/search?q=what+is+a+qr+code&rlz=1C5CHFA_enUS753US753&oq=what+is+a+qr+code&aqs=chrome..69i57j0i20i263j0l8.6993j0j7&sourceid=chrome&ie=UTF-8'
+    long_trial2 = 'https://security.com/super/super/secure?version=forty&mask=seven&ecc=high'
     generate_malicious_qr(
-    message='http://yahoo.at',
-    ecc= 'LOW',
-    version=1,
-    mask=7,
-    image_name='test_red')
+    message=bitly_trial3,
+    ecc= 'MEDIUM',
+    version=3,
+    mask=6,
+    image_name='bt3')
