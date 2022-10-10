@@ -1,5 +1,7 @@
 # qrattack
 
+The final paper can be found [here](https://courses.csail.mit.edu/6.857/2021/projects/Pence-Rustom-McAllister.pdf)
+
 ## Setup
 
 1. `pipenv install`
